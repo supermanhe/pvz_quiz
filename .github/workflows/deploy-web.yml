@@ -5,17 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  export:
+  build-and-deploy:
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.5
@@ -33,25 +24,21 @@ jobs:
           mkdir -v -p build/web
           godot --headless --export-release "Web" build/web/index.html 2>&1 || true
 
-      - name: Add COI headers
+      - name: Create Netlify headers
         run: |
-          cat > build/web/.htaccess << 'EOF'
-          Header set Cross-Origin-Opener-Policy "same-origin"
-          Header set Cross-Origin-Embedder-Policy "require-corp"
+          cat > build/web/_headers << 'EOF'
+          /*
+            Cross-Origin-Opener-Policy: same-origin
+            Cross-Origin-Embedder-Policy: require-corp
           EOF
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
         with:
-          path: build/web
-
-  deploy:
-    needs: export
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          publish-dir: './build/web'
+          production-branch: main
+          production-deploy: true
+          deploy-message: "Deploy from GitHub Actions"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
