@@ -1,12 +1,20 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/quiz/quiz_settings_panel.gd" id="1"]
+[ext_resource type="FontFile" uid="uid://bjnvl0v2ws21u" path="res://assets/fonts/SIMSUN.TTC" id="2"]
 
 [node name="QuizSettingsPanel" type="VBoxContainer"]
-offset_left = 10.0
-offset_top = 550.0
-offset_right = 250.0
-offset_bottom = 680.0
+anchors_preset = 10
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -150.0
+offset_right = -10.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
 theme_override_constants/separation = 8
 script = ExtResource("1")
 
@@ -18,6 +26,14 @@ horizontal_alignment = 1
 [node name="EnabledCheck" type="CheckBox" parent="."]
 layout_mode = 2
 text = "启用答题模式"
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
+theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
+theme_override_colors/font_disabled_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2")
 
 [node name="FrequencyContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
