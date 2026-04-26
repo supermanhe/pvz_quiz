@@ -1,12 +1,12 @@
-extends VBoxContainer
+extends PanelContainer
 
 const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 
-@onready var enabled_check: CheckBox = $EnabledCheck
-@onready var frequency_spin: SpinBox = $FrequencyContainer/FrequencySpin
-@onready var speed_spin: SpinBox = $SpeedContainer/SpeedSpin
-@onready var penalty_spin: SpinBox = $PenaltyContainer/PenaltySpin
-@onready var bank_settings_button: Button = $BankSettingsButton
+@onready var enabled_check: CheckBox = $ContentVBox/EnabledCheck
+@onready var frequency_spin: SpinBox = $ContentVBox/FrequencyContainer/FrequencySpin
+@onready var speed_spin: SpinBox = $ContentVBox/SpeedContainer/SpeedSpin
+@onready var penalty_spin: SpinBox = $ContentVBox/PenaltyContainer/PenaltySpin
+@onready var bank_settings_button: Button = $ContentVBox/BankSettingsButton
 @onready var bank_dialog: AcceptDialog = $BankDialog
 @onready var path_label_math: Label = $BankDialog/Content/MathPathValue
 @onready var path_label_qa: Label = $BankDialog/Content/QAPathValue
