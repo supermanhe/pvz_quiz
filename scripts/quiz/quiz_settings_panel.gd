@@ -2,11 +2,14 @@ extends PanelContainer
 
 const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 
-@onready var enabled_check: CheckBox = $ContentVBox/EnabledCheck
-@onready var frequency_spin: SpinBox = $ContentVBox/FrequencyContainer/FrequencySpin
-@onready var speed_spin: SpinBox = $ContentVBox/SpeedContainer/SpeedSpin
-@onready var penalty_spin: SpinBox = $ContentVBox/PenaltyContainer/PenaltySpin
-@onready var bank_settings_button: Button = $ContentVBox/BankSettingsButton
+@onready var title_button: Button = $ContentVBox/HeaderRow/TitleButton
+@onready var collapse_button: Button = $ContentVBox/HeaderRow/CollapseButton
+@onready var settings_body: VBoxContainer = $ContentVBox/SettingsBody
+@onready var enabled_check: CheckBox = $ContentVBox/SettingsBody/EnabledCheck
+@onready var frequency_spin: SpinBox = $ContentVBox/SettingsBody/FrequencyContainer/FrequencySpin
+@onready var speed_spin: SpinBox = $ContentVBox/SettingsBody/SpeedContainer/SpeedSpin
+@onready var penalty_spin: SpinBox = $ContentVBox/SettingsBody/PenaltyContainer/PenaltySpin
+@onready var bank_settings_button: Button = $ContentVBox/SettingsBody/BankSettingsButton
 @onready var bank_dialog: AcceptDialog = $BankDialog
 @onready var path_label_math: Label = $BankDialog/Content/MathPathValue
 @onready var path_label_qa: Label = $BankDialog/Content/QAPathValue
@@ -18,6 +21,9 @@ const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 @onready var file_dialog: FileDialog = $FileDialog
 
 var _pending_import_type: QuizData.QuestionType = QuizData.QuestionType.MATH
+var _is_collapsed := false
+var _expanded_bottom := 354.0
+var _collapsed_bottom := 112.0
 
 func _ready() -> void:
 	_setup_ui()
@@ -44,6 +50,11 @@ func _setup_ui() -> void:
 	penalty_spin.value = 50
 	penalty_spin.value_changed.connect(_on_setting_changed)
 
+	title_button.text = "答题学习设置"
+	title_button.flat = true
+	title_button.pressed.connect(_on_title_button_pressed)
+	collapse_button.pressed.connect(_on_collapse_button_pressed)
+
 	bank_settings_button.text = "题库设置"
 	bank_settings_button.pressed.connect(_on_bank_settings_button_pressed)
 
@@ -65,6 +76,7 @@ func _load_values() -> void:
 	frequency_spin.value = QuizManager.trigger_frequency
 	speed_spin.value = QuizManager.quiz_speed
 	penalty_spin.value = QuizManager.wrong_penalty
+	_apply_collapsed_state(false)
 
 func _on_setting_changed(_value = null) -> void:
 	QuizManager.is_enabled = enabled_check.button_pressed
@@ -78,6 +90,20 @@ func _refresh_question_bank_info(message: String = "") -> void:
 	path_label_math.text = str(paths.get("math", ""))
 	path_label_qa.text = str(paths.get("qa", ""))
 	status_label.text = message if not message.is_empty() else WINDOWS_ONLY_HINT
+
+func _apply_collapsed_state(collapsed: bool) -> void:
+	_is_collapsed = collapsed
+	settings_body.visible = not collapsed
+	collapse_button.text = "展开" if collapsed else "收起"
+	title_button.text = "设置" if collapsed else "答题学习设置"
+	offset_bottom = _collapsed_bottom if collapsed else _expanded_bottom
+
+func _on_title_button_pressed() -> void:
+	if _is_collapsed:
+		_apply_collapsed_state(false)
+
+func _on_collapse_button_pressed() -> void:
+	_apply_collapsed_state(not _is_collapsed)
 
 func _on_bank_settings_button_pressed() -> void:
 	_refresh_question_bank_info()
