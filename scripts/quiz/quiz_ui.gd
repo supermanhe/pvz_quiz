@@ -12,6 +12,8 @@ extends CanvasLayer
 @onready var wrong_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
 @onready var result_label: Label = $QuizPanel/VBoxContainer/ResultLabel
 
+const PVZ_THEME := preload("res://data/PVZ_theme.tres")
+
 var _current_question: QuizData
 
 func _ready() -> void:
@@ -21,33 +23,11 @@ func _ready() -> void:
 	_hide_all()
 	print("QuizUI: _ready完成, 已连接信号")
 
-func _create_quiz_font_theme() -> Theme:
-	var system_font := SystemFont.new()
-	system_font.font_names = PackedStringArray([
-		"PingFang SC",
-		"Hiragino Sans GB",
-		"Noto Sans CJK SC",
-		"Noto Sans SC",
-		"Source Han Sans SC",
-		"Microsoft YaHei",
-		"Droid Sans Fallback",
-		"Arial Unicode MS",
-		"sans-serif"
-	])
-	system_font.font_weight = 500
-	system_font.hinting = TextServer.HINTING_LIGHT
-	system_font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-
-	var theme := Theme.new()
-	theme.default_font = system_font
-	theme.default_font_size = 24
-	return theme
-
 func _setup_ui() -> void:
 	overlay.color = Color(0, 0, 0, 0.5)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	quiz_panel.custom_minimum_size = Vector2(400, 250)
-	quiz_panel.theme = _create_quiz_font_theme()
+	quiz_panel.theme = PVZ_THEME
 	result_label.visible = false
 	input_field.placeholder_text = "输入答案"
 	input_field.text_submitted.connect(_on_math_submitted)
