@@ -17,7 +17,8 @@ jobs:
       - name: Setup export templates
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates
-          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          cp -r /root/.local/share/godot/export_templates/4.5.stable ~/.local/share/godot/export_templates/4.5.stable 2>/dev/null || true
+          ls ~/.local/share/godot/export_templates/
 
       - name: Web Export
         run: |
