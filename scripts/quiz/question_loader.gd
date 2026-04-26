@@ -1,8 +1,8 @@
 class_name QuestionLoader
 extends RefCounted
 
-const MATH_CSV_PATH := "res://data/quiz_math.csv"
-const QA_CSV_PATH := "res://data/quiz_qa.csv"
+const MATH_CSV_PATH := "res://data/quiz_math.txt"
+const QA_CSV_PATH := "res://data/quiz_qa.txt"
 
 func load_all_questions() -> Array[QuizData]:
 	var questions: Array[QuizData] = []
