@@ -5,9 +5,9 @@
 
 [node name="QuizSettingsPanel" type="VBoxContainer"]
 offset_left = 10.0
-offset_top = 550.0
-offset_right = 250.0
-offset_bottom = 680.0
+offset_top = 500.0
+offset_right = 320.0
+offset_bottom = 760.0
 theme_override_constants/separation = 8
 script = ExtResource("1")
 
