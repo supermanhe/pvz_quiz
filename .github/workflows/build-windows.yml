@@ -22,9 +22,15 @@ jobs:
           mkdir -v -p build/windows
           godot --headless --export-release "Windows Desktop" build/windows/植物大战僵尸-学习版.exe 2>&1
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Package
+        run: |
+          cd build/windows
+          zip -r ../../植物大战僵尸-学习版-windows.zip .
+          cd ../..
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: windows-build
-          path: build/windows/
-          retention-days: 30
+          tag_name: windows-build-${{ github.sha }}
+          name: Windows Build (${{ github.sha }})
+          files: 植物大战僵尸-学习版-windows.zip
