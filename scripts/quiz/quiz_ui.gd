@@ -12,6 +12,8 @@ extends CanvasLayer
 @onready var wrong_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
 @onready var result_label: Label = $QuizPanel/VBoxContainer/ResultLabel
 
+const PVZ_THEME := preload("res://data/PVZ_theme.tres")
+
 var _current_question: QuizData
 
 func _ready() -> void:
@@ -25,6 +27,7 @@ func _setup_ui() -> void:
 	overlay.color = Color(0, 0, 0, 0.5)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	quiz_panel.custom_minimum_size = Vector2(400, 250)
+	quiz_panel.theme = PVZ_THEME
 	result_label.visible = false
 	input_field.placeholder_text = "输入答案"
 	input_field.text_submitted.connect(_on_math_submitted)
