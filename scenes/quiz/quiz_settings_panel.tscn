@@ -4,17 +4,10 @@
 [ext_resource type="FontFile" uid="uid://bjnvl0v2ws21u" path="res://assets/fonts/SIMSUN.TTC" id="2"]
 
 [node name="QuizSettingsPanel" type="VBoxContainer"]
-anchors_preset = 10
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -250.0
-offset_top = -150.0
-offset_right = -10.0
-offset_bottom = -20.0
-grow_horizontal = 0
-grow_vertical = 0
+offset_left = 10.0
+offset_top = 550.0
+offset_right = 250.0
+offset_bottom = 680.0
 theme_override_constants/separation = 8
 script = ExtResource("1")
 
