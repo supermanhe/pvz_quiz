@@ -4,7 +4,7 @@ var _question_loader := QuestionLoader.new()
 var _all_questions: Array[QuizData] = []
 var _wrong_records: Array[Dictionary] = []
 
-var is_enabled := false
+var is_enabled := true
 var trigger_frequency := 3
 var quiz_speed := 0.25
 var wrong_penalty := 50
