@@ -69,3 +69,86 @@ layout_mode = 2
 size_flags_horizontal = 3
 max_value = 999.0
 value = 50.0
+
+[node name="BankSettingsButton" type="Button" parent="."]
+layout_mode = 2
+text = "题库设置"
+
+[node name="BankDialog" type="AcceptDialog" parent="."]
+initial_position = 1
+size = Vector2i(860, 460)
+title = "题库设置"
+visible = false
+ok_button_text = "关闭"
+
+[node name="Content" type="VBoxContainer" parent="BankDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="HintLabel" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "Windows PC：可查看当前题库路径，打开题库目录，选择本地题库文件并重新加载。"
+autowrap_mode = 3
+
+[node name="MathPathTitle" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "数学题库路径："
+
+[node name="MathPathValue" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "-"
+autowrap_mode = 3
+
+[node name="QAPathTitle" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "问答题库路径："
+
+[node name="QAPathValue" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "-"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OpenFolderButton" type="Button" parent="BankDialog/Content/Actions"]
+layout_mode = 2
+text = "打开题库文件夹"
+
+[node name="ReloadButton" type="Button" parent="BankDialog/Content/Actions"]
+layout_mode = 2
+text = "重新加载题库"
+
+[node name="ImportButtons" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ImportMathButton" type="Button" parent="BankDialog/Content/ImportButtons"]
+layout_mode = 2
+text = "选择数学题库文件"
+
+[node name="ImportQAButton" type="Button" parent="BankDialog/Content/ImportButtons"]
+layout_mode = 2
+text = "选择问答题库文件"
+
+[node name="StatusLabel" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+text = "仅 PC Windows 端支持本地题库设置"
+autowrap_mode = 3
+
+[node name="FileDialog" type="FileDialog" parent="."]
+visible = false
+title = "选择题库文件"
+size = Vector2i(900, 560)
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库")

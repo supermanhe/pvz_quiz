@@ -1,14 +1,36 @@
 class_name QuestionLoader
 extends RefCounted
 
-const MATH_CSV_PATH := "res://data/quiz_math.txt"
-const QA_CSV_PATH := "res://data/quiz_qa.txt"
+const DEFAULT_MATH_CSV_PATH := "res://data/quiz_math.txt"
+const DEFAULT_QA_CSV_PATH := "res://data/quiz_qa.txt"
+const USER_MATH_CSV_PATH := "user://quiz_banks/quiz_math.txt"
+const USER_QA_CSV_PATH := "user://quiz_banks/quiz_qa.txt"
 
 func load_all_questions() -> Array[QuizData]:
 	var questions: Array[QuizData] = []
-	questions.append_array(_load_csv(MATH_CSV_PATH, QuizData.QuestionType.MATH))
-	questions.append_array(_load_csv(QA_CSV_PATH, QuizData.QuestionType.QA))
+	questions.append_array(_load_csv(get_math_csv_path(), QuizData.QuestionType.MATH))
+	questions.append_array(_load_csv(get_qa_csv_path(), QuizData.QuestionType.QA))
 	return questions
+
+func get_math_csv_path() -> String:
+	if FileAccess.file_exists(USER_MATH_CSV_PATH):
+		return USER_MATH_CSV_PATH
+	return DEFAULT_MATH_CSV_PATH
+
+func get_qa_csv_path() -> String:
+	if FileAccess.file_exists(USER_QA_CSV_PATH):
+		return USER_QA_CSV_PATH
+	return DEFAULT_QA_CSV_PATH
+
+func get_current_bank_paths() -> Dictionary:
+	return {
+		"math": get_math_csv_path(),
+		"qa": get_qa_csv_path(),
+		"math_default": DEFAULT_MATH_CSV_PATH,
+		"qa_default": DEFAULT_QA_CSV_PATH,
+		"math_user": USER_MATH_CSV_PATH,
+		"qa_user": USER_QA_CSV_PATH,
+	}
 
 func _load_csv(path: String, type: QuizData.QuestionType) -> Array[QuizData]:
 	var questions: Array[QuizData] = []

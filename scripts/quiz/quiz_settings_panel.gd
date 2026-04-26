@@ -1,13 +1,28 @@
 extends VBoxContainer
 
+const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
+
 @onready var enabled_check: CheckBox = $EnabledCheck
 @onready var frequency_spin: SpinBox = $FrequencyContainer/FrequencySpin
 @onready var speed_spin: SpinBox = $SpeedContainer/SpeedSpin
 @onready var penalty_spin: SpinBox = $PenaltyContainer/PenaltySpin
+@onready var bank_settings_button: Button = $BankSettingsButton
+@onready var bank_dialog: AcceptDialog = $BankDialog
+@onready var path_label_math: Label = $BankDialog/Content/MathPathValue
+@onready var path_label_qa: Label = $BankDialog/Content/QAPathValue
+@onready var status_label: Label = $BankDialog/Content/StatusLabel
+@onready var open_folder_button: Button = $BankDialog/Content/Actions/OpenFolderButton
+@onready var reload_button: Button = $BankDialog/Content/Actions/ReloadButton
+@onready var import_math_button: Button = $BankDialog/Content/ImportButtons/ImportMathButton
+@onready var import_qa_button: Button = $BankDialog/Content/ImportButtons/ImportQAButton
+@onready var file_dialog: FileDialog = $FileDialog
+
+var _pending_import_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 
 func _ready() -> void:
 	_setup_ui()
 	_load_values()
+	_refresh_question_bank_info()
 
 func _setup_ui() -> void:
 	enabled_check.text = "启用答题模式"
@@ -29,6 +44,22 @@ func _setup_ui() -> void:
 	penalty_spin.value = 50
 	penalty_spin.value_changed.connect(_on_setting_changed)
 
+	bank_settings_button.text = "题库设置"
+	bank_settings_button.pressed.connect(_on_bank_settings_button_pressed)
+
+	bank_dialog.title = "题库设置"
+	bank_dialog.dialog_hide_on_ok = true
+	bank_dialog.ok_button_text = "关闭"
+
+	open_folder_button.pressed.connect(_on_open_folder_button_pressed)
+	reload_button.pressed.connect(_on_reload_button_pressed)
+	import_math_button.pressed.connect(_on_import_math_button_pressed)
+	import_qa_button.pressed.connect(_on_import_qa_button_pressed)
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	file_dialog.filters = PackedStringArray(["*.txt ; 文本题库", "*.csv ; CSV 题库"])
+	file_dialog.file_selected.connect(_on_file_selected)
+
 func _load_values() -> void:
 	enabled_check.button_pressed = QuizManager.is_enabled
 	frequency_spin.value = QuizManager.trigger_frequency
@@ -41,3 +72,51 @@ func _on_setting_changed(_value = null) -> void:
 	QuizManager.quiz_speed = speed_spin.value
 	QuizManager.wrong_penalty = int(penalty_spin.value)
 	QuizManager.save_settings()
+
+func _refresh_question_bank_info(message: String = "") -> void:
+	var paths := QuizManager.get_question_bank_display_paths()
+	path_label_math.text = str(paths.get("math", ""))
+	path_label_qa.text = str(paths.get("qa", ""))
+	status_label.text = message if not message.is_empty() else WINDOWS_ONLY_HINT
+
+func _on_bank_settings_button_pressed() -> void:
+	_refresh_question_bank_info()
+	bank_dialog.popup_centered_ratio(0.5)
+
+func _on_open_folder_button_pressed() -> void:
+	var folder_path := str(QuizManager.get_question_bank_display_paths().get("folder", ""))
+	if folder_path.is_empty():
+		_refresh_question_bank_info("题库目录不可用")
+		return
+
+	if not DirAccess.dir_exists_absolute(folder_path):
+		var mk_err := DirAccess.make_dir_recursive_absolute(folder_path)
+		if mk_err != OK:
+			_refresh_question_bank_info("创建题库目录失败，错误码：%d" % mk_err)
+			return
+
+	var folder_url := "file:///" + folder_path.replace("\\", "/")
+	OS.shell_open(folder_url)
+	_refresh_question_bank_info("已尝试打开题库目录")
+
+func _on_reload_button_pressed() -> void:
+	QuizManager.reload_questions()
+	_refresh_question_bank_info("题库已重新加载")
+
+func _on_import_math_button_pressed() -> void:
+	_pending_import_type = QuizData.QuestionType.MATH
+	file_dialog.title = "选择数学题库文件"
+	file_dialog.popup_centered_ratio(0.7)
+
+func _on_import_qa_button_pressed() -> void:
+	_pending_import_type = QuizData.QuestionType.QA
+	file_dialog.title = "选择问答题库文件"
+	file_dialog.popup_centered_ratio(0.7)
+
+func _on_file_selected(path: String) -> void:
+	var error_message := QuizManager.import_question_bank(path, _pending_import_type)
+	if error_message.is_empty():
+		var success_text := "数学题库已更新并重新加载" if _pending_import_type == QuizData.QuestionType.MATH else "问答题库已更新并重新加载"
+		_refresh_question_bank_info(success_text)
+	else:
+		_refresh_question_bank_info(error_message)

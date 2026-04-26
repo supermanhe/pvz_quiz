@@ -15,6 +15,7 @@ var _original_time_scale := 1.0
 
 signal quiz_triggered(question: QuizData)
 signal quiz_completed(was_correct: bool, question: QuizData)
+signal question_bank_changed
 
 var _quiz_ui: CanvasLayer
 
@@ -38,6 +39,46 @@ func _ensure_quiz_ui() -> void:
 
 func reload_questions() -> void:
 	_all_questions = _question_loader.load_all_questions()
+	question_bank_changed.emit()
+
+func get_question_bank_paths() -> Dictionary:
+	return _question_loader.get_current_bank_paths()
+
+func get_question_bank_display_paths() -> Dictionary:
+	var paths := get_question_bank_paths()
+	return {
+		"math": ProjectSettings.globalize_path(paths.get("math", "")),
+		"qa": ProjectSettings.globalize_path(paths.get("qa", "")),
+		"folder": ProjectSettings.globalize_path("user://quiz_banks"),
+	}
+
+func import_question_bank(source_path: String, question_type: QuizData.QuestionType) -> String:
+	if source_path.is_empty():
+		return "未选择文件"
+	if not FileAccess.file_exists(source_path):
+		return "文件不存在：" + source_path
+
+	var target_path := QuestionLoader.USER_MATH_CSV_PATH if question_type == QuizData.QuestionType.MATH else QuestionLoader.USER_QA_CSV_PATH
+	var target_dir := target_path.get_base_dir()
+	if not DirAccess.dir_exists_absolute(target_dir):
+		var mk_err := DirAccess.make_dir_recursive_absolute(target_dir)
+		if mk_err != OK:
+			return "创建题库目录失败，错误码：%d" % mk_err
+
+	var source_file := FileAccess.open(source_path, FileAccess.READ)
+	if source_file == null:
+		return "无法读取文件：" + source_path
+	var content := source_file.get_as_text()
+	source_file.close()
+
+	var target_file := FileAccess.open(target_path, FileAccess.WRITE)
+	if target_file == null:
+		return "无法写入题库文件：" + target_path
+	target_file.store_string(content)
+	target_file.close()
+
+	reload_questions()
+	return ""
 
 func get_random_question() -> QuizData:
 	if _all_questions.is_empty():
