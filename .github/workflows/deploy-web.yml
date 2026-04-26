@@ -3,6 +3,7 @@ name: Deploy Web
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -33,7 +34,23 @@ jobs:
             Cross-Origin-Embedder-Policy: require-corp
           EOF
 
-      - name: Deploy to Netlify
+      - name: Deploy Preview to Netlify
+        if: github.event_name == 'pull_request'
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: './build/web'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          production-branch: main
+          production-deploy: false
+          enable-pull-request-comment: true
+          deploy-message: "Preview deploy for PR #${{ github.event.pull_request.number }} @ ${{ github.sha }}"
+          alias: deploy-preview-${{ github.event.pull_request.number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Deploy Production to Netlify
+        if: github.event_name != 'pull_request'
         uses: nwtgck/actions-netlify@v3
         with:
           publish-dir: './build/web'
