@@ -2,6 +2,7 @@ extends PanelContainer
 
 const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 
+@onready var header_row: HBoxContainer = $ContentVBox/HeaderRow
 @onready var title_button: Button = $ContentVBox/HeaderRow/TitleButton
 @onready var collapse_button: Button = $ContentVBox/HeaderRow/CollapseButton
 @onready var settings_body: VBoxContainer = $ContentVBox/SettingsBody
@@ -29,6 +30,13 @@ func _ready() -> void:
 	_setup_ui()
 	_load_values()
 	_refresh_question_bank_info()
+	EventBus.subscribe("main_game_progress_update", _on_game_progress_update)
+
+func _on_game_progress_update(progress) -> void:
+	if progress is Array and progress.size() > 0:
+		progress = progress[0]
+	if progress == MainGameManager.E_MainGameProgress.MAIN_GAME:
+		_apply_collapsed_state(true)
 
 func _setup_ui() -> void:
 	enabled_check.text = "启用答题模式"
@@ -94,13 +102,13 @@ func _refresh_question_bank_info(message: String = "") -> void:
 func _apply_collapsed_state(collapsed: bool) -> void:
 	_is_collapsed = collapsed
 	settings_body.visible = not collapsed
-	collapse_button.text = "展开" if collapsed else "收起"
+	collapse_button.visible = not collapsed
 	title_button.text = "设置" if collapsed else "答题学习设置"
+	title_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if collapsed else Control.SIZE_EXPAND_FILL
 	offset_bottom = _collapsed_bottom if collapsed else _expanded_bottom
 
 func _on_title_button_pressed() -> void:
-	if _is_collapsed:
-		_apply_collapsed_state(false)
+	_apply_collapsed_state(not _is_collapsed)
 
 func _on_collapse_button_pressed() -> void:
 	_apply_collapsed_state(not _is_collapsed)
