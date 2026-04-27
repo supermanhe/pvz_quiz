@@ -1,55 +1,98 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://xbsj1x57c8fb"]
 
-[ext_resource type="Script" path="res://scripts/quiz/quiz_settings_panel.gd" id="1"]
+[ext_resource type="Script" uid="uid://b06xqfsgu7fog" path="res://scripts/quiz/quiz_settings_panel.gd" id="1"]
 [ext_resource type="FontFile" uid="uid://bjnvl0v2ws21u" path="res://assets/fonts/SIMSUN.TTC" id="2"]
 
-[node name="QuizSettingsPanel" type="VBoxContainer"]
-offset_left = 10.0
-offset_top = 550.0
-offset_right = 250.0
-offset_bottom = 680.0
-theme_override_constants/separation = 8
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_quiz_panel"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0, 0, 0, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.2)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="QuizSettingsPanel" type="PanelContainer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 610.0
+offset_top = 64.0
+offset_right = 928.0
+offset_bottom = 354.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_quiz_panel")
 script = ExtResource("1")
 
-[node name="Label" type="Label" parent="."]
+[node name="ContentVBox" type="VBoxContainer" parent="."]
 layout_mode = 2
-text = "答题学习设置"
-horizontal_alignment = 1
+theme_override_constants/separation = 8
 
-[node name="EnabledCheck" type="CheckBox" parent="."]
+[node name="HeaderRow" type="HBoxContainer" parent="ContentVBox"]
 layout_mode = 2
-text = "启用答题模式"
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0, 0, 0, 1)
-theme_override_colors/font_focus_color = Color(0, 0, 0, 1)
-theme_override_colors/font_hover_pressed_color = Color(0, 0, 0, 1)
-theme_override_colors/font_disabled_color = Color(0, 0, 0, 1)
+
+[node name="TitleButton" type="Button" parent="ContentVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "答题学习设置"
+flat = true
+
+[node name="CollapseButton" type="Button" parent="ContentVBox/HeaderRow"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "收起"
+
+[node name="SettingsBody" type="VBoxContainer" parent="ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnabledCheck" type="CheckBox" parent="ContentVBox/SettingsBody"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_disabled_color = Color(0.5, 0.5, 0.5, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_fonts/font = ExtResource("2")
+text = "启用答题模式"
 
-[node name="FrequencyContainer" type="HBoxContainer" parent="."]
+[node name="FrequencyContainer" type="HBoxContainer" parent="ContentVBox/SettingsBody"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="FrequencyContainer"]
+[node name="Label" type="Label" parent="ContentVBox/SettingsBody/FrequencyContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "触发频率(种植N棵):"
 
-[node name="FrequencySpin" type="SpinBox" parent="FrequencyContainer"]
+[node name="FrequencySpin" type="SpinBox" parent="ContentVBox/SettingsBody/FrequencyContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
 max_value = 99.0
 value = 3.0
 
-[node name="SpeedContainer" type="HBoxContainer" parent="."]
+[node name="SpeedContainer" type="HBoxContainer" parent="ContentVBox/SettingsBody"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="SpeedContainer"]
+[node name="Label" type="Label" parent="ContentVBox/SettingsBody/SpeedContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "答题速度倍数:"
 
-[node name="SpeedSpin" type="SpinBox" parent="SpeedContainer"]
+[node name="SpeedSpin" type="SpinBox" parent="ContentVBox/SettingsBody/SpeedContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 0.1
@@ -57,15 +100,113 @@ max_value = 0.5
 step = 0.05
 value = 0.25
 
-[node name="PenaltyContainer" type="HBoxContainer" parent="."]
+[node name="PenaltyContainer" type="HBoxContainer" parent="ContentVBox/SettingsBody"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PenaltyContainer"]
+[node name="Label" type="Label" parent="ContentVBox/SettingsBody/PenaltyContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "答错扣阳光:"
 
-[node name="PenaltySpin" type="SpinBox" parent="PenaltyContainer"]
+[node name="PenaltySpin" type="SpinBox" parent="ContentVBox/SettingsBody/PenaltyContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 999.0
 value = 50.0
+
+[node name="BankSettingsButton" type="Button" parent="ContentVBox/SettingsBody"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "题库设置"
+
+[node name="BankDialog" type="AcceptDialog" parent="."]
+title = "题库设置"
+initial_position = 1
+size = Vector2i(860, 460)
+ok_button_text = "关闭"
+
+[node name="Content" type="VBoxContainer" parent="BankDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="HintLabel" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Windows PC：可查看当前题库路径，打开题库目录，选择本地题库文件并重新加载。"
+autowrap_mode = 3
+
+[node name="MathPathTitle" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "数学题库路径："
+
+[node name="MathPathValue" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "-"
+autowrap_mode = 3
+
+[node name="QAPathTitle" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "问答题库路径："
+
+[node name="QAPathValue" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "-"
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OpenFolderButton" type="Button" parent="BankDialog/Content/Actions"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "打开题库文件夹"
+
+[node name="ReloadButton" type="Button" parent="BankDialog/Content/Actions"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "重新加载题库"
+
+[node name="ImportButtons" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ImportMathButton" type="Button" parent="BankDialog/Content/ImportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "选择数学题库文件"
+
+[node name="ImportQAButton" type="Button" parent="BankDialog/Content/ImportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "选择问答题库文件"
+
+[node name="StatusLabel" type="Label" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "仅 PC Windows 端支持本地题库设置"
+autowrap_mode = 3
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Open a File"
+size = Vector2i(900, 560)
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库")
