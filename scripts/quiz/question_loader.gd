@@ -66,6 +66,10 @@ func validate_csv(path: String) -> Dictionary:
 	var content := file.get_as_text()
 	file.close()
 
+	# 去除 UTF-8 BOM
+	if content.begins_with("\ufeff"):
+		content = content.substr(1)
+
 	# 文件大小检查
 	var file_size := content.length()
 	var warnings: Array[String] = []
@@ -82,7 +86,8 @@ func validate_csv(path: String) -> Dictionary:
 		if record.is_empty():
 			continue
 		# 跳过表头
-		if i == 0 and record.to_lower().begins_with("question"):
+		var lower := record.to_lower()
+		if i == 0 and (lower.begins_with("question") or lower.begins_with("\ufeffquestion")):
 			continue
 		data_lines += 1
 		var fields := _parse_csv_line(record)
@@ -141,13 +146,18 @@ func _load_csv(path: String, type: QuizData.QuestionType) -> Dictionary:
 	var content := file.get_as_text()
 	file.close()
 
+	# 去除 UTF-8 BOM（Excel 导出的 CSV 常见）
+	if content.begins_with("\ufeff"):
+		content = content.substr(1)
+
 	var records := _split_csv_records(content)
 	for i in range(records.size()):
 		var record: String = records[i]
 		if record.is_empty():
 			continue
-		# 跳过表头（首行且以 question 开头）
-		if i == 0 and record.to_lower().begins_with("question"):
+		# 跳过表头（首行且以 question 开头，忽略 BOM 残留）
+		var lower := record.to_lower()
+		if i == 0 and (lower.begins_with("question") or lower.begins_with("\ufeffquestion")):
 			continue
 
 		total += 1

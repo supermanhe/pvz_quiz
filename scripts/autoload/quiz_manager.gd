@@ -85,7 +85,22 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		if mk_err != OK:
 			return { "success": false, "message": "创建题库目录失败，错误码：%d" % mk_err }
 
-	# 3. 备份原文件
+	# 3. 源文件 == 目标文件：直接重载，不做备份/复制
+	var source_abs := ProjectSettings.globalize_path(source_path) if source_path.begins_with("user://") or source_path.begins_with("res://") else source_path
+	var target_abs := ProjectSettings.globalize_path(target_path) if target_path.begins_with("user://") or target_path.begins_with("res://") else target_path
+	if source_abs == target_abs:
+		var report := reload_questions()
+		var type_name := "数学" if question_type == QuizData.QuestionType.MATH else "问答"
+		return {
+			"success": true,
+			"message": "%s题库重新加载（%d题）" % [type_name, report["loaded"]],
+			"loaded": report["loaded"],
+			"skipped": report["skipped"],
+			"errors": report["errors"],
+			"warnings": report.get("warnings", []),
+		}
+
+	# 4. 备份原文件
 	var backup_path := target_path + ".bak"
 	var has_backup := false
 	if FileAccess.file_exists(target_path):
