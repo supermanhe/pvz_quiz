@@ -82,9 +82,36 @@ func _on_quiz_triggered(question: QuizData) -> void:
 func _on_math_submitted(_text: String = "") -> void:
 	if _current_question == null or not math_section.visible:
 		return
-	var user_answer := input_field.text.strip_edges()
-	var is_correct := (user_answer == _current_question.answer)
+	var user_answer := input_field.text
+	var is_correct := _answers_match(user_answer, _current_question.answer)
 	_show_result(is_correct)
+
+# 答案归一化比较：大小写、全半角、空格、数值
+func _answers_match(user_input: String, correct: String) -> bool:
+	var a := _normalize_answer(user_input)
+	var b := _normalize_answer(correct)
+	if a == b:
+		return true
+	# 数值比较：8 == 8.0, 01 == 1
+	if a.is_valid_float() and b.is_valid_float():
+		return absf(a.to_float() - b.to_float()) < 0.001
+	return false
+
+func _normalize_answer(text: String) -> String:
+	var result := text.strip_edges().to_lower()
+	var normalized := ""
+	for i in range(result.length()):
+		var c := result.unicode_at(i)
+		# 全角 ASCII → 半角 (０xFF01-0xFF5E → 0x0021-0x007E)
+		if c >= 0xFF01 and c <= 0xFF5E:
+			normalized += char(c - 0xFEE0)
+		# 全角空格 → 半角空格
+		elif c == 0x3000:
+			normalized += " "
+		else:
+			normalized += result[i]
+	# 去掉所有空格后比较
+	return normalized.replace(" ", "")
 
 func _on_qa_answer(is_correct: bool) -> void:
 	_show_result(is_correct)

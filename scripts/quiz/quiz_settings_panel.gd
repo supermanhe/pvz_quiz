@@ -134,8 +134,11 @@ func _on_open_folder_button_pressed() -> void:
 	_refresh_question_bank_info("已尝试打开题库目录")
 
 func _on_reload_button_pressed() -> void:
-	QuizManager.reload_questions()
-	_refresh_question_bank_info("题库已重新加载")
+	var report := QuizManager.reload_questions()
+	var msg := "题库已重新加载（%d题）" % report["loaded"]
+	if report["skipped"] > 0:
+		msg += "\n⚠ 跳过 %d 行有问题的数据" % report["skipped"]
+	_refresh_question_bank_info(msg)
 
 func _on_import_math_button_pressed() -> void:
 	_pending_import_type = QuizData.QuestionType.MATH
@@ -148,9 +151,5 @@ func _on_import_qa_button_pressed() -> void:
 	file_dialog.popup_centered_ratio(0.7)
 
 func _on_file_selected(path: String) -> void:
-	var error_message := QuizManager.import_question_bank(path, _pending_import_type)
-	if error_message.is_empty():
-		var success_text := "数学题库已更新并重新加载" if _pending_import_type == QuizData.QuestionType.MATH else "问答题库已更新并重新加载"
-		_refresh_question_bank_info(success_text)
-	else:
-		_refresh_question_bank_info(error_message)
+	var result := QuizManager.import_question_bank(path, _pending_import_type)
+	_refresh_question_bank_info(result["message"])
