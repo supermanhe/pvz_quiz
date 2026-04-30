@@ -144,7 +144,7 @@ func _read_sheet(zip: ZIPReader, shared_strings: Array[String]) -> Array[Array]:
 				# 存入 row_dict
 				if not cell_ref.is_empty():
 					var indices := _cell_ref_to_indices(cell_ref)
-					row_dict[indices.y] = final_value  # 用 col 作 key
+					row_dict[indices.x] = final_value  # 用 col 作 key
 			elif name == "row":
 				# 组装一行
 				if current_row_index >= 0 and not row_dict.is_empty():
@@ -157,8 +157,6 @@ func _read_sheet(zip: ZIPReader, shared_strings: Array[String]) -> Array[Array]:
 						row_array.append(row_dict.get(c, ""))
 					rows.append(row_array)
 
-	# 按行号排序
-	rows.sort_custom(func(a, b): return true)  # 已经按序解析，无需排序
 	return rows
 
 
