@@ -56,15 +56,17 @@ func get_question_bank_display_paths() -> Dictionary:
 		"folder": ProjectSettings.globalize_path("user://quiz_banks"),
 	}
 
-# 导入题库：校验 → 备份 → 替换 → 加载验证
+# 导入题库：校验 → 备份 → 替换 → 加载验证（支持 csv/txt/xlsx）
 func import_question_bank(source_path: String, question_type: QuizData.QuestionType) -> Dictionary:
 	if source_path.is_empty():
 		return { "success": false, "message": "未选择文件" }
 	if not FileAccess.file_exists(source_path):
 		return { "success": false, "message": "文件不存在：" + source_path }
 
+	var is_xlsx := source_path.to_lower().ends_with(".xlsx")
+
 	# 1. 校验源文件
-	var validation := _question_loader.validate_csv(source_path)
+	var validation := _question_loader.validate_file(source_path)
 	if not validation["valid"]:
 		var err_count: int = validation["errors"].size()
 		var first_err: String = validation["errors"][0]["reason"] if err_count > 0 else "未知错误"
@@ -85,20 +87,21 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		if mk_err != OK:
 			return { "success": false, "message": "创建题库目录失败，错误码：%d" % mk_err }
 
-	# 3. 源文件 == 目标文件：直接重载，不做备份/复制
-	var source_abs := ProjectSettings.globalize_path(source_path) if source_path.begins_with("user://") or source_path.begins_with("res://") else source_path
-	var target_abs := ProjectSettings.globalize_path(target_path) if target_path.begins_with("user://") or target_path.begins_with("res://") else target_path
-	if source_abs == target_abs:
-		var report := reload_questions()
-		var type_name := "数学" if question_type == QuizData.QuestionType.MATH else "问答"
-		return {
-			"success": true,
-			"message": "%s题库重新加载（%d题）" % [type_name, report["loaded"]],
-			"loaded": report["loaded"],
-			"skipped": report["skipped"],
-			"errors": report["errors"],
-			"warnings": report.get("warnings", []),
-		}
+	# 3. 源文件 == 目标文件：直接重载（仅 CSV/TXT）
+	if not is_xlsx:
+		var source_abs := ProjectSettings.globalize_path(source_path) if source_path.begins_with("user://") or source_path.begins_with("res://") else source_path
+		var target_abs := ProjectSettings.globalize_path(target_path) if target_path.begins_with("user://") or target_path.begins_with("res://") else target_path
+		if source_abs == target_abs:
+			var report := reload_questions()
+			var type_name := "数学" if question_type == QuizData.QuestionType.MATH else "问答"
+			return {
+				"success": true,
+				"message": "%s题库重新加载（%d题）" % [type_name, report["loaded"]],
+				"loaded": report["loaded"],
+				"skipped": report["skipped"],
+				"errors": report["errors"],
+				"warnings": report.get("warnings", []),
+			}
 
 	# 4. 备份原文件
 	var backup_path := target_path + ".bak"
@@ -106,7 +109,6 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 	if FileAccess.file_exists(target_path):
 		var dir := DirAccess.open(target_dir)
 		if dir:
-			# 删除旧备份
 			if FileAccess.file_exists(backup_path):
 				dir.remove(backup_path.get_file())
 			var rename_err := dir.rename(target_path.get_file(), backup_path.get_file())
@@ -115,21 +117,48 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 			else:
 				return { "success": false, "message": "备份原题库失败，错误码：%d" % rename_err }
 
-	# 4. 复制新文件
-	var copy_err := DirAccess.copy_absolute(source_path, target_path)
-	if copy_err != OK:
-		# 还原备份
-		if has_backup:
-			var dir := DirAccess.open(target_dir)
-			if dir:
-				dir.remove(target_path.get_file())
-				dir.rename(backup_path.get_file(), target_path.get_file())
-		return { "success": false, "message": "写入题库文件失败，错误码：%d" % copy_err }
+	# 5. 写入目标文件
+	if is_xlsx:
+		# xlsx → 读取数据 → 写入 CSV
+		var load_result := _question_loader.load_xlsx(source_path, question_type)
+		if load_result["questions"].is_empty():
+			if has_backup:
+				var dir := DirAccess.open(target_dir)
+				if dir:
+					dir.rename(backup_path.get_file(), target_path.get_file())
+			return { "success": false, "message": "xlsx文件中没有有效题目" }
+		var csv_content := "question,answer\n"
+		for q: QuizData in load_result["questions"]:
+			var question_escaped := q.question
+			var answer_escaped := q.answer
+			if question_escaped.contains(",") or question_escaped.contains("\"") or question_escaped.contains("\n"):
+				question_escaped = "\"" + question_escaped.replace("\"", "\"\"") + "\""
+			if answer_escaped.contains(",") or answer_escaped.contains("\"") or answer_escaped.contains("\n"):
+				answer_escaped = "\"" + answer_escaped.replace("\"", "\"\"") + "\""
+			csv_content += "%s,%s\n" % [question_escaped, answer_escaped]
+		var file := FileAccess.open(target_path, FileAccess.WRITE)
+		if file == null:
+			if has_backup:
+				var dir := DirAccess.open(target_dir)
+				if dir:
+					dir.rename(backup_path.get_file(), target_path.get_file())
+			return { "success": false, "message": "写入题库文件失败" }
+		file.store_string(csv_content)
+		file.close()
+	else:
+		# CSV/TXT → 直接复制
+		var copy_err := DirAccess.copy_absolute(source_path, target_path)
+		if copy_err != OK:
+			if has_backup:
+				var dir := DirAccess.open(target_dir)
+				if dir:
+					dir.remove(target_path.get_file())
+					dir.rename(backup_path.get_file(), target_path.get_file())
+			return { "success": false, "message": "写入题库文件失败，错误码：%d" % copy_err }
 
-	# 5. 重新加载并验证
+	# 6. 重新加载并验证
 	var report := reload_questions()
 	if report["loaded"] == 0:
-		# 加载失败，还原备份
 		if has_backup:
 			var dir := DirAccess.open(target_dir)
 			if dir:
@@ -138,7 +167,7 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 			reload_questions()
 		return { "success": false, "message": "题库文件已写入但加载失败，已还原原题库" }
 
-	# 6. 清理备份（成功后）
+	# 7. 清理备份
 	if has_backup:
 		var dir := DirAccess.open(target_dir)
 		if dir:
@@ -156,6 +185,39 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		"skipped": report["skipped"],
 		"errors": report["errors"],
 		"warnings": report.get("warnings", []),
+	}
+
+# 导出题库为 xlsx
+func export_question_bank(question_type: QuizData.QuestionType, target_path: String) -> Dictionary:
+	if target_path.is_empty():
+		return { "success": false, "message": "未选择保存位置" }
+
+	var type_name := "数学" if question_type == QuizData.QuestionType.MATH else "问答"
+
+	# 收集指定类型的题目
+	var questions: Array[QuizData] = []
+	for q in _all_questions:
+		if q.question_type == question_type:
+			questions.append(q)
+
+	if questions.is_empty():
+		return { "success": false, "message": "当前没有%s题可导出" % type_name }
+
+	# 构建数据
+	var headers: Array[String] = ["question", "answer"]
+	var rows: Array[Array] = []
+	for q in questions:
+		rows.append([q.question, q.answer])
+
+	var xlsx := XlsxHandler.new()
+	var result := xlsx.write_xlsx(target_path, headers, rows)
+	if not result["success"]:
+		return { "success": false, "message": "导出失败: " + result["error"] }
+
+	return {
+		"success": true,
+		"message": "%s题库导出成功！共 %d 道题\n%s" % [type_name, questions.size(), target_path],
+		"count": questions.size(),
 	}
 
 func get_random_question() -> QuizData:

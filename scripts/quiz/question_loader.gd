@@ -54,7 +54,80 @@ func load_all_questions_with_report() -> Dictionary:
 		"warnings": warnings,
 	}
 
-# 导入前校验，不修改任何文件
+# 导入前校验，自动识别 csv/xlsx
+func validate_file(path: String) -> Dictionary:
+	if path.to_lower().ends_with(".xlsx"):
+		return validate_xlsx(path)
+	return validate_csv(path)
+
+# 校验 xlsx 文件
+func validate_xlsx(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return { "valid": false, "total": 0, "would_load": 0, "errors": [{ "line": 0, "reason": "文件不存在: " + path }] }
+
+	var xlsx := XlsxHandler.new()
+	var result := xlsx.read_xlsx(path)
+	if not result["success"]:
+		return { "valid": false, "total": 0, "would_load": 0, "errors": [{ "line": 0, "reason": result["error"] }] }
+
+	var rows: Array = result["rows"]
+	var errors: Array[Dictionary] = []
+	var valid_count := 0
+
+	for i in range(rows.size()):
+		var row: Array = rows[i]
+		if row.size() < 2:
+			errors.append({ "line": i + 2, "reason": "列数不足(需≥2列，实际%d列)" % row.size() })
+		elif str(row[0]).strip_edges().is_empty():
+			errors.append({ "line": i + 2, "reason": "题目为空" })
+		else:
+			valid_count += 1
+
+	return {
+		"valid": errors.is_empty(),
+		"total": rows.size(),
+		"would_load": valid_count,
+		"errors": errors,
+		"warnings": [],
+	}
+
+# 从 xlsx 加载题目
+func load_xlsx(path: String, type: QuizData.QuestionType) -> Dictionary:
+	var questions: Array[QuizData] = []
+	var errors: Array[Dictionary] = []
+	var skipped := 0
+
+	var xlsx := XlsxHandler.new()
+	var result := xlsx.read_xlsx(path)
+	if not result["success"]:
+		errors.append({ "line": 0, "reason": result["error"] })
+		return { "questions": questions, "total": 0, "skipped": 0, "errors": errors }
+
+	var rows: Array = result["rows"]
+	for i in range(rows.size()):
+		var row: Array = rows[i]
+		if row.size() < 2:
+			skipped += 1
+			errors.append({ "line": i + 2, "reason": "列数不足" })
+			continue
+
+		var question_text := str(row[0]).strip_edges()
+		if question_text.is_empty():
+			skipped += 1
+			errors.append({ "line": i + 2, "reason": "题目为空" })
+			continue
+
+		var q := QuizData.new()
+		q.id = _next_id
+		_next_id += 1
+		q.question_type = type
+		q.question = question_text
+		q.answer = str(row[1]).strip_edges()
+		questions.append(q)
+
+	return { "questions": questions, "total": rows.size(), "skipped": skipped, "errors": errors }
+
+# 导入前校验（CSV 专用）
 func validate_csv(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return { "valid": false, "total": 0, "would_load": 0, "errors": [{ "line": 0, "reason": "文件不存在: " + path }] }

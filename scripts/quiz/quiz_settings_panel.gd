@@ -19,9 +19,13 @@ const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 @onready var reload_button: Button = $BankDialog/Content/Actions/ReloadButton
 @onready var import_math_button: Button = $BankDialog/Content/ImportButtons/ImportMathButton
 @onready var import_qa_button: Button = $BankDialog/Content/ImportButtons/ImportQAButton
+@onready var export_math_button: Button = $BankDialog/Content/ExportButtons/ExportMathButton
+@onready var export_qa_button: Button = $BankDialog/Content/ExportButtons/ExportQAButton
 @onready var file_dialog: FileDialog = $FileDialog
+@onready var save_dialog: FileDialog = $SaveDialog
 
 var _pending_import_type: QuizData.QuestionType = QuizData.QuestionType.MATH
+var _pending_export_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 var _is_collapsed := false
 var _expanded_bottom := 354.0
 var _collapsed_bottom := 112.0
@@ -74,10 +78,17 @@ func _setup_ui() -> void:
 	reload_button.pressed.connect(_on_reload_button_pressed)
 	import_math_button.pressed.connect(_on_import_math_button_pressed)
 	import_qa_button.pressed.connect(_on_import_qa_button_pressed)
+	export_math_button.pressed.connect(_on_export_math_button_pressed)
+	export_qa_button.pressed.connect(_on_export_qa_button_pressed)
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
 	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	file_dialog.filters = PackedStringArray(["*.txt ; 文本题库", "*.csv ; CSV 题库"])
+	file_dialog.filters = PackedStringArray(["*.txt ; 文本题库", "*.csv ; CSV 题库", "*.xlsx ; Excel 题库"])
 	file_dialog.file_selected.connect(_on_file_selected)
+
+	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	save_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	save_dialog.filters = PackedStringArray(["*.xlsx ; Excel 文件"])
+	save_dialog.file_selected.connect(_on_save_file_selected)
 
 func _load_values() -> void:
 	enabled_check.button_pressed = QuizManager.is_enabled
@@ -152,4 +163,20 @@ func _on_import_qa_button_pressed() -> void:
 
 func _on_file_selected(path: String) -> void:
 	var result := QuizManager.import_question_bank(path, _pending_import_type)
+	_refresh_question_bank_info(result["message"])
+
+func _on_export_math_button_pressed() -> void:
+	_pending_export_type = QuizData.QuestionType.MATH
+	save_dialog.title = "导出数学题库"
+	save_dialog.current_file = "数学题库.xlsx"
+	save_dialog.popup_centered_ratio(0.7)
+
+func _on_export_qa_button_pressed() -> void:
+	_pending_export_type = QuizData.QuestionType.QA
+	save_dialog.title = "导出问答题库"
+	save_dialog.current_file = "问答题库.xlsx"
+	save_dialog.popup_centered_ratio(0.7)
+
+func _on_save_file_selected(path: String) -> void:
+	var result := QuizManager.export_question_bank(_pending_export_type, path)
 	_refresh_question_bank_info(result["message"])
