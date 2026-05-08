@@ -20,9 +20,9 @@ void fragment() {
             }
         }
         blurred /= total_weight;
-        // 混合模糊背景 + 半透明黑色遮罩
-        COLOR = mix(blurred, vec4(0.0, 0.0, 0.0, 1.0), opacity * 0.6);
-        COLOR.a = opacity;
+        // 模糊背景上叠加黑色遮罩，opacity 控制黑色占比
+        COLOR = mix(blurred, vec4(0.0, 0.0, 0.0, 1.0), opacity);
+        COLOR.a = 1.0;
     } else {
         // 纯色遮罩
         COLOR = vec4(0.0, 0.0, 0.0, opacity);

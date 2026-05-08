@@ -141,10 +141,14 @@ func _show_result(is_correct: bool) -> void:
 	qa_section.visible = false
 	result_label.visible = true
 	if is_correct:
-		result_label.text = "回答正确!"
-		result_label.add_theme_color_override("font_color", Color.GREEN)
+		result_label.text = "✅ 回答正确!"
+		result_label.add_theme_font_size_override("font_size", 36)
+		result_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))
+		_play_correct_effect()
+		SoundManager.play_other_SFX("points")
 	else:
-		result_label.text = "回答错误! 扣除%d阳光" % QuizManager.wrong_penalty
+		result_label.text = "❌ 回答错误! 扣除%d阳光" % QuizManager.wrong_penalty
+		result_label.add_theme_font_size_override("font_size", 24)
 		result_label.add_theme_color_override("font_color", Color.RED)
 		QuizManager.end_quiz(false, _current_question, _current_user_answer)
 		await get_tree().create_timer(1.5).timeout
@@ -153,7 +157,30 @@ func _show_result(is_correct: bool) -> void:
 		_current_user_answer = ""
 		return
 	QuizManager.end_quiz(true, _current_question, _current_user_answer)
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(1.2).timeout
 	_hide_all()
 	_current_question = null
 	_current_user_answer = ""
+
+# 回答正确特效：缩放弹跳 + 阳光粒子飘散
+func _play_correct_effect() -> void:
+	# 文字缩放弹跳
+	result_label.scale = Vector2(0.3, 0.3)
+	var tween := create_tween()
+	tween.tween_property(result_label, "scale", Vector2(1.2, 1.2), 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(result_label, "scale", Vector2(1.0, 1.0), 0.15)
+
+	# 飘出几个 "+☀" 粒子
+	for i in range(5):
+		var particle := Label.new()
+		particle.text = "☀"
+		particle.add_theme_font_size_override("font_size", randi_range(18, 28))
+		particle.modulate = Color(1, 0.9, 0.2, 1)
+		quiz_panel.add_child(particle)
+		var start_pos := result_label.position + Vector2(randf_range(-60, 60), randf_range(-10, 10))
+		particle.position = start_pos
+		var ptween := create_tween()
+		ptween.set_parallel(true)
+		ptween.tween_property(particle, "position", start_pos + Vector2(randf_range(-40, 40), randf_range(-80, -40)), randf_range(0.6, 1.0)).set_ease(Tween.EASE_OUT)
+		ptween.tween_property(particle, "modulate:a", 0.0, randf_range(0.6, 1.0)).set_delay(0.2)
+		ptween.chain().tween_callback(particle.queue_free)

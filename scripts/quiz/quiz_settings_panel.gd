@@ -179,7 +179,35 @@ func _apply_collapsed_state(collapsed: bool) -> void:
 	collapse_button.visible = not collapsed
 	title_button.text = "设置" if collapsed else "答题学习设置"
 	title_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if collapsed else Control.SIZE_EXPAND_FILL
-	offset_bottom = _collapsed_bottom if collapsed else _expanded_bottom
+	if collapsed:
+		# 收起：去掉黑色背景，缩小为纯按钮
+		theme_override_styles/panel = null
+		offset_left = -60.0
+		offset_top = 0.0
+		offset_right = 0.0
+		offset_bottom = 40.0
+	else:
+		# 展开：恢复黑色背景
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0, 0, 0, 0.6)
+		style.border_width_left = 2
+		style.border_width_top = 2
+		style.border_width_right = 2
+		style.border_width_bottom = 2
+		style.border_color = Color(1, 1, 1, 0.2)
+		style.corner_radius_top_left = 12
+		style.corner_radius_top_right = 12
+		style.corner_radius_bottom_right = 12
+		style.corner_radius_bottom_left = 12
+		style.content_margin_left = 12.0
+		style.content_margin_top = 12.0
+		style.content_margin_right = 12.0
+		style.content_margin_bottom = 12.0
+		theme_override_styles/panel = style
+		offset_left = 610.0
+		offset_top = 64.0
+		offset_right = 928.0
+		offset_bottom = 454.0
 
 func _on_title_button_pressed() -> void:
 	_apply_collapsed_state(not _is_collapsed)
