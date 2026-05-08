@@ -41,8 +41,17 @@ const WINDOWS_ONLY_HINT := "仅 PC Windows 端支持本地题库设置"
 var _pending_import_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 var _pending_export_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 var _is_collapsed := false
-var _expanded_bottom := 454.0
-var _collapsed_bottom := 112.0
+var _expanded_panel_style: StyleBoxFlat
+
+const EXPANDED_LEFT := -330.0
+const EXPANDED_TOP := 108.0
+const EXPANDED_RIGHT := -12.0
+const EXPANDED_BOTTOM := 498.0
+
+const COLLAPSED_LEFT := -84.0
+const COLLAPSED_TOP := 108.0
+const COLLAPSED_RIGHT := -12.0
+const COLLAPSED_BOTTOM := 148.0
 
 func _ready() -> void:
 	_setup_ui()
@@ -57,6 +66,7 @@ func _on_game_progress_update(progress) -> void:
 		_apply_collapsed_state(true)
 
 func _setup_ui() -> void:
+	_expanded_panel_style = get("theme_override_styles/panel") as StyleBoxFlat
 	enabled_check.text = "启用答题模式"
 	enabled_check.toggled.connect(_on_setting_changed)
 
@@ -179,35 +189,36 @@ func _apply_collapsed_state(collapsed: bool) -> void:
 	collapse_button.visible = not collapsed
 	title_button.text = "设置" if collapsed else "答题学习设置"
 	title_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if collapsed else Control.SIZE_EXPAND_FILL
+	title_button.custom_minimum_size = Vector2(72, 36) if collapsed else Vector2.ZERO
+
 	if collapsed:
-		# 收起：去掉黑色背景，缩小为纯按钮
-		theme_override_styles/panel = null
-		offset_left = -60.0
-		offset_top = 0.0
-		offset_right = 0.0
-		offset_bottom = 40.0
+		set("theme_override_styles/panel", null)
+		offset_left = COLLAPSED_LEFT
+		offset_top = COLLAPSED_TOP
+		offset_right = COLLAPSED_RIGHT
+		offset_bottom = COLLAPSED_BOTTOM
 	else:
-		# 展开：恢复黑色背景
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0, 0, 0, 0.6)
-		style.border_width_left = 2
-		style.border_width_top = 2
-		style.border_width_right = 2
-		style.border_width_bottom = 2
-		style.border_color = Color(1, 1, 1, 0.2)
-		style.corner_radius_top_left = 12
-		style.corner_radius_top_right = 12
-		style.corner_radius_bottom_right = 12
-		style.corner_radius_bottom_left = 12
-		style.content_margin_left = 12.0
-		style.content_margin_top = 12.0
-		style.content_margin_right = 12.0
-		style.content_margin_bottom = 12.0
-		theme_override_styles/panel = style
-		offset_left = 610.0
-		offset_top = 64.0
-		offset_right = 928.0
-		offset_bottom = 454.0
+		if _expanded_panel_style == null:
+			_expanded_panel_style = StyleBoxFlat.new()
+			_expanded_panel_style.bg_color = Color(0, 0, 0, 0.6)
+			_expanded_panel_style.border_width_left = 2
+			_expanded_panel_style.border_width_top = 2
+			_expanded_panel_style.border_width_right = 2
+			_expanded_panel_style.border_width_bottom = 2
+			_expanded_panel_style.border_color = Color(1, 1, 1, 0.2)
+			_expanded_panel_style.corner_radius_top_left = 12
+			_expanded_panel_style.corner_radius_top_right = 12
+			_expanded_panel_style.corner_radius_bottom_right = 12
+			_expanded_panel_style.corner_radius_bottom_left = 12
+			_expanded_panel_style.content_margin_left = 12.0
+			_expanded_panel_style.content_margin_top = 12.0
+			_expanded_panel_style.content_margin_right = 12.0
+			_expanded_panel_style.content_margin_bottom = 12.0
+		set("theme_override_styles/panel", _expanded_panel_style)
+		offset_left = EXPANDED_LEFT
+		offset_top = EXPANDED_TOP
+		offset_right = EXPANDED_RIGHT
+		offset_bottom = EXPANDED_BOTTOM
 
 func _on_title_button_pressed() -> void:
 	_apply_collapsed_state(not _is_collapsed)
