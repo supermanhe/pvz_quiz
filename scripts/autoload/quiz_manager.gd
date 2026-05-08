@@ -8,6 +8,8 @@ var is_enabled := true
 var trigger_frequency := 3
 var quiz_speed := 0.25
 var wrong_penalty := 50
+var overlay_opacity := 0.5
+var overlay_blur := 3.0
 
 var plant_count := 0
 var is_quiz_active := false
@@ -80,6 +82,44 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 	reload_questions()
 	return ""
 
+# 导出错题本为 xlsx
+func export_wrong_records(target_path: String) -> Dictionary:
+	if target_path.is_empty():
+		return { "success": false, "message": "未选择保存位置" }
+
+	if _wrong_records.is_empty():
+		return { "success": false, "message": "错题本为空，没有可导出的内容" }
+
+	var headers: Array[String] = ["question", "answer", "user_answer", "wrong_count"]
+	var rows: Array[Array] = []
+	for record in _wrong_records:
+		rows.append([
+			record.get("question", ""),
+			record.get("answer", ""),
+			record.get("user_answer", ""),
+			str(record.get("count", 1)),
+		])
+
+	var xlsx := XlsxHandler.new()
+	var result := xlsx.write_xlsx(target_path, headers, rows)
+	if not result["success"]:
+		return { "success": false, "message": "导出失败: " + result["error"] }
+
+	return {
+		"success": true,
+		"message": "错题本导出成功！共 %d 条错题\n%s" % [_wrong_records.size(), target_path],
+		"count": _wrong_records.size(),
+	}
+
+# 获取错题本数据
+func get_wrong_records() -> Array[Dictionary]:
+	return _wrong_records
+
+# 清空错题本
+func clear_wrong_records() -> void:
+	_wrong_records.clear()
+	_save_wrong_records()
+
 func get_random_question() -> QuizData:
 	if _all_questions.is_empty():
 		reload_questions()
@@ -105,12 +145,12 @@ func start_quiz() -> void:
 		push_error("QuizManager: QuizUI无效，无法弹出")
 	quiz_triggered.emit(question)
 
-func end_quiz(was_correct: bool, question: QuizData) -> void:
+func end_quiz(was_correct: bool, question: QuizData, user_answer: String = "") -> void:
 	is_quiz_active = false
 	Engine.time_scale = _original_time_scale
 	if not was_correct:
 		EventBus.push_event("add_sun_value", [-wrong_penalty])
-		_record_wrong_answer(question)
+		_record_wrong_answer(question, user_answer)
 	quiz_completed.emit(was_correct, question)
 
 func _on_plant_placed() -> void:
@@ -131,18 +171,20 @@ func _on_game_progress_update(progress: int) -> void:
 		plant_count = 0
 		reload_questions()
 
-func _record_wrong_answer(question: QuizData) -> void:
+func _record_wrong_answer(question: QuizData, user_answer: String = "") -> void:
 	var timestamp := Time.get_datetime_string_from_system()
 	for record in _wrong_records:
 		if record["question"] == question.question and record["type"] == question.question_type:
 			record["count"] += 1
 			record["last_time"] = timestamp
+			record["user_answer"] = user_answer if not user_answer.is_empty() else record.get("user_answer", "")
 			_save_wrong_records()
 			return
 	_wrong_records.append({
 		"type": question.question_type,
 		"question": question.question,
 		"answer": question.answer,
+		"user_answer": user_answer,
 		"count": 1,
 		"last_time": timestamp,
 	})
@@ -171,6 +213,8 @@ func _load_settings() -> void:
 	trigger_frequency = data.get("trigger_frequency", 3)
 	quiz_speed = data.get("quiz_speed", 0.25)
 	wrong_penalty = data.get("wrong_penalty", 50)
+	overlay_opacity = data.get("overlay_opacity", 0.5)
+	overlay_blur = data.get("overlay_blur", 3.0)
 
 func save_settings() -> void:
 	var path := "user://quiz_settings.json"
@@ -179,4 +223,6 @@ func save_settings() -> void:
 		"trigger_frequency": trigger_frequency,
 		"quiz_speed": quiz_speed,
 		"wrong_penalty": wrong_penalty,
+		"overlay_opacity": overlay_opacity,
+		"overlay_blur": overlay_blur,
 	}, path)

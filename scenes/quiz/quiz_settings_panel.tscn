@@ -26,7 +26,7 @@ anchor_right = 1.0
 offset_left = 610.0
 offset_top = 64.0
 offset_right = 928.0
-offset_bottom = 354.0
+offset_bottom = 454.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_quiz_panel")
 script = ExtResource("1")
@@ -114,11 +114,59 @@ size_flags_horizontal = 3
 max_value = 999.0
 value = 50.0
 
+[node name="OpacityContainer" type="HBoxContainer" parent="ContentVBox/SettingsBody"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ContentVBox/SettingsBody/OpacityContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "遮罩透明度:"
+
+[node name="OpacitySlider" type="HSlider" parent="ContentVBox/SettingsBody/OpacityContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.1
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="OpacityValue" type="Label" parent="ContentVBox/SettingsBody/OpacityContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "50%"
+
+[node name="BlurContainer" type="HBoxContainer" parent="ContentVBox/SettingsBody"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ContentVBox/SettingsBody/BlurContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "模糊强度:"
+
+[node name="BlurSlider" type="HSlider" parent="ContentVBox/SettingsBody/BlurContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 10.0
+step = 0.5
+value = 3.0
+
+[node name="BlurValue" type="Label" parent="ContentVBox/SettingsBody/BlurContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "3.0"
+
 [node name="BankSettingsButton" type="Button" parent="ContentVBox/SettingsBody"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 text = "题库设置"
+
+[node name="WrongRecordsButton" type="Button" parent="ContentVBox/SettingsBody"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "错题本"
 
 [node name="BankDialog" type="AcceptDialog" parent="."]
 title = "题库设置"
@@ -190,13 +238,29 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-text = "选择数学题库文件"
+text = "导入数学题库"
 
 [node name="ImportQAButton" type="Button" parent="BankDialog/Content/ImportButtons"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-text = "选择问答题库文件"
+text = "导入问答题库"
+
+[node name="ExportButtons" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ExportMathButton" type="Button" parent="BankDialog/Content/ExportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "导出数学题库(Excel)"
+
+[node name="ExportQAButton" type="Button" parent="BankDialog/Content/ExportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "导出问答题库(Excel)"
 
 [node name="StatusLabel" type="Label" parent="BankDialog/Content"]
 layout_mode = 2
@@ -209,4 +273,100 @@ title = "Open a File"
 size = Vector2i(900, 560)
 file_mode = 0
 access = 2
-filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库")
+filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库", "*.xlsx ; Excel 题库")
+
+[node name="SaveDialog" type="FileDialog" parent="."]
+title = "导出题库"
+size = Vector2i(900, 560)
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.xlsx ; Excel 文件")
+
+[node name="ErrorDialog" type="AcceptDialog" parent="."]
+title = "导入错误"
+initial_position = 1
+size = Vector2i(700, 400)
+ok_button_text = "确定"
+
+[node name="ErrorContent" type="VBoxContainer" parent="ErrorDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="ErrorSummary" type="Label" parent="ErrorDialog/ErrorContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "错误摘要"
+autowrap_mode = 3
+
+[node name="ErrorScroll" type="ScrollContainer" parent="ErrorDialog/ErrorContent"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ErrorList" type="VBoxContainer" parent="ErrorDialog/ErrorContent/ErrorScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="WrongRecordsDialog" type="AcceptDialog" parent="."]
+title = "错题本"
+initial_position = 1
+size = Vector2i(860, 500)
+ok_button_text = "关闭"
+
+[node name="Content" type="VBoxContainer" parent="WrongRecordsDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderRow" type="HBoxContainer" parent="WrongRecordsDialog/Content"]
+layout_mode = 2
+
+[node name="CountLabel" type="Label" parent="WrongRecordsDialog/Content/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "共 0 条错题"
+
+[node name="ExportWrongButton" type="Button" parent="WrongRecordsDialog/Content/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "导出错题本(Excel)"
+
+[node name="ClearWrongButton" type="Button" parent="WrongRecordsDialog/Content/HeaderRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.3, 0.3, 1)
+text = "清空错题本"
+
+[node name="RecordsScroll" type="ScrollContainer" parent="WrongRecordsDialog/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RecordsList" type="VBoxContainer" parent="WrongRecordsDialog/Content/RecordsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="WrongSaveDialog" type="FileDialog" parent="."]
+title = "导出错题本"
+size = Vector2i(900, 560)
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.xlsx ; Excel 文件")

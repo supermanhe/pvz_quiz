@@ -13,8 +13,10 @@ extends CanvasLayer
 @onready var result_label: Label = $QuizPanel/VBoxContainer/ResultLabel
 
 const PVZ_THEME := preload("res://data/PVZ_theme.tres")
+const OVERLAY_SHADER := preload("res://shaders/quiz_overlay.gdshader")
 
 var _current_question: QuizData
+var _current_user_answer: String = ""
 
 func _ready() -> void:
 	layer = 100
@@ -24,7 +26,12 @@ func _ready() -> void:
 	print("QuizUI: _ready完成, 已连接信号")
 
 func _setup_ui() -> void:
-	overlay.color = Color(0, 0, 0, 0.5)
+	# 设置遮罩 shader
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = OVERLAY_SHADER
+	overlay.material = shader_mat
+	_apply_overlay_settings()
+
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	quiz_panel.custom_minimum_size = Vector2(400, 250)
 	quiz_panel.theme = PVZ_THEME
@@ -36,25 +43,34 @@ func _setup_ui() -> void:
 	qa_hint_label.text = "请家长判断对错"
 	correct_button.text = "对"
 	wrong_button.text = "错"
-	correct_button.pressed.connect(_on_qa_answer.bind(true))
-	wrong_button.pressed.connect(_on_qa_answer.bind(false))
+	correct_button.pressed.connect(_on_qa_answer.bind(true, "对"))
+	wrong_button.pressed.connect(_on_qa_answer.bind(false, "错"))
+
+func _apply_overlay_settings() -> void:
+	if overlay.material is ShaderMaterial:
+		var mat: ShaderMaterial = overlay.material
+		mat.set_shader_parameter("opacity", QuizManager.overlay_opacity)
+		mat.set_shader_parameter("blur_amount", QuizManager.overlay_blur)
 
 func _hide_all() -> void:
 	overlay.visible = false
 	quiz_panel.visible = false
 
 func _show_all() -> void:
+	_apply_overlay_settings()
 	overlay.visible = true
 	quiz_panel.visible = true
 
 func show_quiz(question: QuizData) -> void:
 	print("QuizUI: show_quiz被调用, 题目:", question.question)
 	_current_question = question
+	_current_user_answer = ""
 	_show_all()
 	result_label.visible = false
 	math_section.visible = false
 	qa_section.visible = false
-	question_label.text = question.question
+	# 题目文字：加大字号 + 加粗 + 醒目颜色
+	question_label.text = "[b][font_size=28][color=#FFD700]%s[/color][/font_size][/b]" % question.question
 	match question.question_type:
 		QuizData.QuestionType.MATH:
 			math_section.visible = true
@@ -66,11 +82,13 @@ func show_quiz(question: QuizData) -> void:
 func _on_quiz_triggered(question: QuizData) -> void:
 	print("QuizUI: 收到答题信号, 题目:", question.question)
 	_current_question = question
+	_current_user_answer = ""
 	_show_all()
 	result_label.visible = false
 	math_section.visible = false
 	qa_section.visible = false
-	question_label.text = question.question
+	# 题目文字：加大字号 + 加粗 + 醒目颜色
+	question_label.text = "[b][font_size=28][color=#FFD700]%s[/color][/font_size][/b]" % question.question
 	match question.question_type:
 		QuizData.QuestionType.MATH:
 			math_section.visible = true
@@ -82,11 +100,40 @@ func _on_quiz_triggered(question: QuizData) -> void:
 func _on_math_submitted(_text: String = "") -> void:
 	if _current_question == null or not math_section.visible:
 		return
-	var user_answer := input_field.text.strip_edges()
-	var is_correct := (user_answer == _current_question.answer)
+	var user_answer := input_field.text
+	_current_user_answer = user_answer
+	var is_correct := _answers_match(user_answer, _current_question.answer)
 	_show_result(is_correct)
 
-func _on_qa_answer(is_correct: bool) -> void:
+# 答案归一化比较：大小写、全半角、空格、数值
+func _answers_match(user_input: String, correct: String) -> bool:
+	var a := _normalize_answer(user_input)
+	var b := _normalize_answer(correct)
+	if a == b:
+		return true
+	# 数值比较：8 == 8.0, 01 == 1
+	if a.is_valid_float() and b.is_valid_float():
+		return absf(a.to_float() - b.to_float()) < 0.001
+	return false
+
+func _normalize_answer(text: String) -> String:
+	var result := text.strip_edges().to_lower()
+	var normalized := ""
+	for i in range(result.length()):
+		var c := result.unicode_at(i)
+		# 全角 ASCII → 半角 (０xFF01-0xFF5E → 0x0021-0x007E)
+		if c >= 0xFF01 and c <= 0xFF5E:
+			normalized += char(c - 0xFEE0)
+		# 全角空格 → 半角空格
+		elif c == 0x3000:
+			normalized += " "
+		else:
+			normalized += result[i]
+	# 去掉所有空格后比较
+	return normalized.replace(" ", "")
+
+func _on_qa_answer(is_correct: bool, user_answer: String) -> void:
+	_current_user_answer = user_answer
 	_show_result(is_correct)
 
 func _show_result(is_correct: bool) -> void:
@@ -99,12 +146,14 @@ func _show_result(is_correct: bool) -> void:
 	else:
 		result_label.text = "回答错误! 扣除%d阳光" % QuizManager.wrong_penalty
 		result_label.add_theme_color_override("font_color", Color.RED)
-		QuizManager.end_quiz(false, _current_question)
+		QuizManager.end_quiz(false, _current_question, _current_user_answer)
 		await get_tree().create_timer(1.5).timeout
 		_hide_all()
 		_current_question = null
+		_current_user_answer = ""
 		return
-	QuizManager.end_quiz(true, _current_question)
+	QuizManager.end_quiz(true, _current_question, _current_user_answer)
 	await get_tree().create_timer(1.0).timeout
 	_hide_all()
 	_current_question = null
+	_current_user_answer = ""
