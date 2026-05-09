@@ -3,6 +3,9 @@ name: Build Windows
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: ubuntu-latest
@@ -27,6 +30,12 @@ jobs:
           cd build/windows
           zip -r ../../植物大战僵尸-学习版-windows.zip .
           cd ../..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvz-quiz-windows
+          path: 植物大战僵尸-学习版-windows.zip
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

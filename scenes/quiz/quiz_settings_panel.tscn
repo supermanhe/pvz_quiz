@@ -190,13 +190,29 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-text = "选择数学题库文件"
+text = "导入数学题库"
 
 [node name="ImportQAButton" type="Button" parent="BankDialog/Content/ImportButtons"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-text = "选择问答题库文件"
+text = "导入问答题库"
+
+[node name="ExportButtons" type="HBoxContainer" parent="BankDialog/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ExportMathButton" type="Button" parent="BankDialog/Content/ExportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "导出数学题库(Excel)"
+
+[node name="ExportQAButton" type="Button" parent="BankDialog/Content/ExportButtons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+text = "导出问答题库(Excel)"
 
 [node name="StatusLabel" type="Label" parent="BankDialog/Content"]
 layout_mode = 2
@@ -209,4 +225,11 @@ title = "Open a File"
 size = Vector2i(900, 560)
 file_mode = 0
 access = 2
-filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库")
+filters = PackedStringArray("*.txt ; 文本题库", "*.csv ; CSV 题库", "*.xlsx ; Excel 题库")
+
+[node name="SaveDialog" type="FileDialog" parent="."]
+title = "导出题库"
+size = Vector2i(900, 560)
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.xlsx ; Excel 文件")
