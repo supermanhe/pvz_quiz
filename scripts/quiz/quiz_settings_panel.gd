@@ -43,13 +43,14 @@ var _pending_export_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 var _is_collapsed := false
 var _expanded_panel_style: StyleBoxFlat
 
-const PANEL_RIGHT_MARGIN := 12.0
-const EXPANDED_WIDTH := 318.0
+const EXPANDED_LEFT := -330.0
 const EXPANDED_TOP := 108.0
+const EXPANDED_RIGHT := -12.0
 const EXPANDED_BOTTOM := 498.0
 
-const COLLAPSED_WIDTH := 72.0
+const COLLAPSED_LEFT := -84.0
 const COLLAPSED_TOP := 108.0
+const COLLAPSED_RIGHT := -12.0
 const COLLAPSED_BOTTOM := 148.0
 
 func _ready() -> void:
@@ -192,7 +193,10 @@ func _apply_collapsed_state(collapsed: bool) -> void:
 
 	if collapsed:
 		set("theme_override_styles/panel", null)
-		_set_left_anchored_bounds(COLLAPSED_WIDTH, COLLAPSED_TOP, COLLAPSED_BOTTOM)
+		offset_left = COLLAPSED_LEFT
+		offset_top = COLLAPSED_TOP
+		offset_right = COLLAPSED_RIGHT
+		offset_bottom = COLLAPSED_BOTTOM
 	else:
 		if _expanded_panel_style == null:
 			_expanded_panel_style = StyleBoxFlat.new()
@@ -211,17 +215,10 @@ func _apply_collapsed_state(collapsed: bool) -> void:
 			_expanded_panel_style.content_margin_right = 12.0
 			_expanded_panel_style.content_margin_bottom = 12.0
 		set("theme_override_styles/panel", _expanded_panel_style)
-		_set_left_anchored_bounds(EXPANDED_WIDTH, EXPANDED_TOP, EXPANDED_BOTTOM)
-
-func _set_left_anchored_bounds(panel_width: float, top: float, bottom: float) -> void:
-	anchor_left = 0.0
-	anchor_right = 0.0
-	var viewport_width := get_viewport().get_visible_rect().size.x
-	var left := max(0.0, viewport_width - PANEL_RIGHT_MARGIN - panel_width)
-	offset_left = left
-	offset_top = top
-	offset_right = left + panel_width
-	offset_bottom = bottom
+		offset_left = EXPANDED_LEFT
+		offset_top = EXPANDED_TOP
+		offset_right = EXPANDED_RIGHT
+		offset_bottom = EXPANDED_BOTTOM
 
 func _on_title_button_pressed() -> void:
 	_apply_collapsed_state(not _is_collapsed)
