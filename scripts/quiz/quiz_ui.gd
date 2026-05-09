@@ -21,6 +21,7 @@ var _current_user_answer: String = ""
 func _ready() -> void:
 	layer = 100
 	QuizManager.quiz_triggered.connect(_on_quiz_triggered)
+	QuizManager.settings_changed.connect(_on_quiz_settings_changed)
 	_setup_ui()
 	_hide_all()
 	print("QuizUI: _ready完成, 已连接信号")
@@ -51,6 +52,10 @@ func _apply_overlay_settings() -> void:
 		var mat: ShaderMaterial = overlay.material
 		mat.set_shader_parameter("opacity", QuizManager.overlay_opacity)
 		mat.set_shader_parameter("blur_amount", QuizManager.overlay_blur)
+	overlay.color = Color(0, 0, 0, QuizManager.overlay_opacity)
+
+func _on_quiz_settings_changed() -> void:
+	_apply_overlay_settings()
 
 func _hide_all() -> void:
 	overlay.visible = false
