@@ -90,14 +90,14 @@ func _setup_ui() -> void:
 	opacity_slider.min_value = 0.1
 	opacity_slider.max_value = 1.0
 	opacity_slider.step = 0.05
-	opacity_slider.value = 0.5
+	opacity_slider.value = 0.25
 	opacity_slider.value_changed.connect(_on_opacity_changed)
 
 	# 模糊强度滑块
 	blur_slider.min_value = 0.0
 	blur_slider.max_value = 10.0
 	blur_slider.step = 0.5
-	blur_slider.value = 3.0
+	blur_slider.value = 5.5
 	blur_slider.value_changed.connect(_on_blur_changed)
 
 	title_button.text = "答题学习设置"

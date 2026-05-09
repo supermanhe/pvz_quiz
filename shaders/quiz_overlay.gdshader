@@ -1,8 +1,8 @@
 shader_type canvas_item;
 
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
-uniform float opacity : hint_range(0.0, 1.0) = 0.5;
-uniform float blur_amount : hint_range(0.0, 10.0) = 3.0;
+uniform float opacity : hint_range(0.0, 1.0) = 0.25;
+uniform float blur_amount : hint_range(0.0, 10.0) = 5.5;
 uniform float overlay_layers : hint_range(1.0, 5.0, 1.0) = 3.0;
 
 void fragment() {

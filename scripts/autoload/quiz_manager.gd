@@ -8,8 +8,8 @@ var is_enabled := true
 var trigger_frequency := 3
 var quiz_speed := 0.25
 var wrong_penalty := 50
-var overlay_opacity := 0.7
-var overlay_blur := 3.0
+var overlay_opacity := 0.25
+var overlay_blur := 5.5
 
 var plant_count := 0
 var is_quiz_active := false
@@ -343,8 +343,8 @@ func _load_settings() -> void:
 	trigger_frequency = data.get("trigger_frequency", 3)
 	quiz_speed = data.get("quiz_speed", 0.25)
 	wrong_penalty = data.get("wrong_penalty", 50)
-	overlay_opacity = data.get("overlay_opacity", 0.5)
-	overlay_blur = data.get("overlay_blur", 3.0)
+	overlay_opacity = data.get("overlay_opacity", 0.25)
+	overlay_blur = data.get("overlay_blur", 5.5)
 
 func save_settings() -> void:
 	var path := "user://quiz_settings.json"
