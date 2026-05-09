@@ -14,6 +14,7 @@ extends CanvasLayer
 
 const PVZ_THEME := preload("res://data/PVZ_theme.tres")
 const OVERLAY_SHADER := preload("res://shaders/quiz_overlay.gdshader")
+const OVERLAY_STACK_LAYERS := 3.0
 
 var _current_question: QuizData
 var _current_user_answer: String = ""
@@ -51,6 +52,7 @@ func _apply_overlay_settings() -> void:
 		var mat: ShaderMaterial = overlay.material
 		mat.set_shader_parameter("opacity", QuizManager.overlay_opacity)
 		mat.set_shader_parameter("blur_amount", QuizManager.overlay_blur)
+		mat.set_shader_parameter("overlay_layers", OVERLAY_STACK_LAYERS)
 
 func _hide_all() -> void:
 	overlay.visible = false

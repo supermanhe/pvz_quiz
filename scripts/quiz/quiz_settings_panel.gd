@@ -43,14 +43,16 @@ var _pending_export_type: QuizData.QuestionType = QuizData.QuestionType.MATH
 var _is_collapsed := false
 var _expanded_panel_style: StyleBoxFlat
 
-const EXPANDED_LEFT := -330.0
+const PANEL_X_OFFSET := 36.0
+
+const EXPANDED_LEFT := -330.0 + PANEL_X_OFFSET
 const EXPANDED_TOP := 108.0
-const EXPANDED_RIGHT := -12.0
+const EXPANDED_RIGHT := -12.0 + PANEL_X_OFFSET
 const EXPANDED_BOTTOM := 498.0
 
-const COLLAPSED_LEFT := -84.0
+const COLLAPSED_LEFT := -84.0 + PANEL_X_OFFSET
 const COLLAPSED_TOP := 108.0
-const COLLAPSED_RIGHT := -12.0
+const COLLAPSED_RIGHT := -12.0 + PANEL_X_OFFSET
 const COLLAPSED_BOTTOM := 148.0
 
 func _ready() -> void:

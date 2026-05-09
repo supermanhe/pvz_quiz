@@ -17,10 +17,13 @@ func _ready() -> void:
 	if quiz_settings_scene:
 		quiz_settings_layer = CanvasLayer.new()
 		quiz_settings_layer.layer = 20
-		add_child(quiz_settings_layer)
 		quiz_settings_panel = quiz_settings_scene.instantiate()
 		quiz_settings_layer.add_child(quiz_settings_panel)
+		get_tree().root.add_child.call_deferred(quiz_settings_layer)
 
+func _exit_tree() -> void:
+	if is_instance_valid(quiz_settings_layer):
+		quiz_settings_layer.queue_free()
 
 ## 初始化出战卡槽，管理器调用
 func init_card_slot_norm(game_para:ResourceLevelData):
@@ -231,4 +234,3 @@ func move_card_slot_battle(is_appeal:bool, appeal_time:= 0.2):
 	else:
 		tween.tween_property(card_slot_battle, "position",Vector2(0, -100.0), appeal_time)
 	await tween.finished
-
