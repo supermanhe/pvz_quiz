@@ -18,9 +18,8 @@ var _original_time_scale := 1.0
 signal quiz_triggered(question: QuizData)
 signal quiz_completed(was_correct: bool, question: QuizData)
 signal question_bank_changed
-signal settings_changed
 
-var _quiz_ui: Node
+var _quiz_ui: CanvasLayer
 
 func _ready() -> void:
 	EventBus.subscribe("quiz_plant_placed", _on_plant_placed)
@@ -35,7 +34,7 @@ func _ensure_quiz_ui() -> void:
 	var scene := load("res://scenes/quiz/quiz_ui.tscn")
 	if scene:
 		_quiz_ui = scene.instantiate()
-		get_tree().root.add_child(_quiz_ui)
+		get_tree().root.add_child.call_deferred(_quiz_ui)
 		print("QuizManager: QuizUI加载成功")
 	else:
 		push_error("QuizManager: 无法加载quiz_ui.tscn")
@@ -259,8 +258,6 @@ func get_random_question() -> QuizData:
 	return _all_questions[randi() % _all_questions.size()]
 
 func start_quiz() -> void:
-	if not is_enabled:
-		return
 	if is_quiz_active:
 		return
 	var question := get_random_question()
@@ -270,14 +267,12 @@ func start_quiz() -> void:
 	is_quiz_active = true
 	_original_time_scale = Engine.time_scale
 	Engine.time_scale = quiz_speed
+	print("QuizManager: 准备弹出答题, quiz_ui有效:", is_instance_valid(_quiz_ui))
 	_ensure_quiz_ui()
 	if is_instance_valid(_quiz_ui) and _quiz_ui.has_method("show_quiz"):
 		_quiz_ui.show_quiz(question)
 	else:
 		push_error("QuizManager: QuizUI无效，无法弹出")
-		is_quiz_active = false
-		Engine.time_scale = _original_time_scale
-		return
 	quiz_triggered.emit(question)
 
 func end_quiz(was_correct: bool, question: QuizData, user_answer: String = "") -> void:
@@ -344,7 +339,7 @@ func _load_settings() -> void:
 	var data = Global.load_json(path)
 	if data.is_empty():
 		return
-	is_enabled = data.get("enabled", true)
+	is_enabled = data.get("enabled", false)
 	trigger_frequency = data.get("trigger_frequency", 3)
 	quiz_speed = data.get("quiz_speed", 0.25)
 	wrong_penalty = data.get("wrong_penalty", 50)
@@ -361,4 +356,3 @@ func save_settings() -> void:
 		"overlay_opacity": overlay_opacity,
 		"overlay_blur": overlay_blur,
 	}, path)
-	settings_changed.emit()

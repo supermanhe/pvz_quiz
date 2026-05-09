@@ -10,16 +10,12 @@ class_name CardSlotNorm
 @onready var card_slot_battle: CardSlotBattle = $CardSlotBattle
 
 var quiz_settings_panel: Control
-var quiz_settings_layer: CanvasLayer
 
 func _ready() -> void:
 	var quiz_settings_scene := load("res://scenes/quiz/quiz_settings_panel.tscn")
 	if quiz_settings_scene:
-		quiz_settings_layer = CanvasLayer.new()
-		quiz_settings_layer.layer = 20
-		add_child(quiz_settings_layer)
 		quiz_settings_panel = quiz_settings_scene.instantiate()
-		quiz_settings_layer.add_child(quiz_settings_panel)
+		add_child(quiz_settings_panel)
 
 
 ## 初始化出战卡槽，管理器调用
@@ -231,3 +227,4 @@ func move_card_slot_battle(is_appeal:bool, appeal_time:= 0.2):
 	else:
 		tween.tween_property(card_slot_battle, "position",Vector2(0, -100.0), appeal_time)
 	await tween.finished
+

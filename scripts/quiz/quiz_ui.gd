@@ -1,39 +1,38 @@
-extends Node
+extends CanvasLayer
 
-@onready var overlay_layer: CanvasLayer = $OverlayLayer
-@onready var panel_layer: CanvasLayer = $PanelLayer
-@onready var overlay: ColorRect = $OverlayLayer/Overlay
-@onready var quiz_panel: PanelContainer = $PanelLayer/QuizPanel
-@onready var question_label: RichTextLabel = $PanelLayer/QuizPanel/VBoxContainer/QuestionLabel
-@onready var math_section: VBoxContainer = $PanelLayer/QuizPanel/VBoxContainer/MathSection
-@onready var input_field: LineEdit = $PanelLayer/QuizPanel/VBoxContainer/MathSection/InputField
-@onready var submit_button: Button = $PanelLayer/QuizPanel/VBoxContainer/MathSection/SubmitButton
-@onready var qa_section: VBoxContainer = $PanelLayer/QuizPanel/VBoxContainer/QASection
-@onready var qa_hint_label: Label = $PanelLayer/QuizPanel/VBoxContainer/QASection/QAHintLabel
-@onready var correct_button: Button = $PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow/CorrectButton
-@onready var wrong_button: Button = $PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
-@onready var result_label: Label = $PanelLayer/QuizPanel/VBoxContainer/ResultLabel
+@onready var overlay: ColorRect = $Overlay
+@onready var quiz_panel: PanelContainer = $QuizPanel
+@onready var question_label: RichTextLabel = $QuizPanel/VBoxContainer/QuestionLabel
+@onready var math_section: VBoxContainer = $QuizPanel/VBoxContainer/MathSection
+@onready var input_field: LineEdit = $QuizPanel/VBoxContainer/MathSection/InputField
+@onready var submit_button: Button = $QuizPanel/VBoxContainer/MathSection/SubmitButton
+@onready var qa_section: VBoxContainer = $QuizPanel/VBoxContainer/QASection
+@onready var qa_hint_label: Label = $QuizPanel/VBoxContainer/QASection/QAHintLabel
+@onready var correct_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/CorrectButton
+@onready var wrong_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
+@onready var result_label: Label = $QuizPanel/VBoxContainer/ResultLabel
 
 const PVZ_THEME := preload("res://data/PVZ_theme.tres")
+const OVERLAY_SHADER := preload("res://shaders/quiz_overlay.gdshader")
 
 var _current_question: QuizData
 var _current_user_answer: String = ""
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
-	overlay_layer.layer = 126
-	panel_layer.layer = 127
-	QuizManager.settings_changed.connect(_on_quiz_settings_changed)
+	layer = 100
+	QuizManager.quiz_triggered.connect(_on_quiz_triggered)
 	_setup_ui()
 	_hide_all()
-	print("QuizUI: _ready完成")
+	print("QuizUI: _ready完成, 已连接信号")
 
 func _setup_ui() -> void:
+	# 设置遮罩 shader
+	var shader_mat := ShaderMaterial.new()
+	shader_mat.shader = OVERLAY_SHADER
+	overlay.material = shader_mat
 	_apply_overlay_settings()
 
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	overlay.z_index = 0
-	quiz_panel.z_index = 1
 	quiz_panel.custom_minimum_size = Vector2(400, 250)
 	quiz_panel.theme = PVZ_THEME
 	result_label.visible = false
@@ -48,22 +47,40 @@ func _setup_ui() -> void:
 	wrong_button.pressed.connect(_on_qa_answer.bind(false, "错"))
 
 func _apply_overlay_settings() -> void:
-	overlay.color = Color(0, 0, 0, QuizManager.overlay_opacity)
-
-func _on_quiz_settings_changed() -> void:
-	_apply_overlay_settings()
+	if overlay.material is ShaderMaterial:
+		var mat: ShaderMaterial = overlay.material
+		mat.set_shader_parameter("opacity", QuizManager.overlay_opacity)
+		mat.set_shader_parameter("blur_amount", QuizManager.overlay_blur)
 
 func _hide_all() -> void:
-	overlay_layer.visible = false
-	panel_layer.visible = false
+	overlay.visible = false
+	quiz_panel.visible = false
 
 func _show_all() -> void:
 	_apply_overlay_settings()
-	overlay_layer.visible = true
-	panel_layer.visible = true
+	overlay.visible = true
+	quiz_panel.visible = true
 
 func show_quiz(question: QuizData) -> void:
 	print("QuizUI: show_quiz被调用, 题目:", question.question)
+	_current_question = question
+	_current_user_answer = ""
+	_show_all()
+	result_label.visible = false
+	math_section.visible = false
+	qa_section.visible = false
+	# 题目文字：加大字号 + 加粗 + 醒目颜色
+	question_label.text = "[b][font_size=28][color=#FFD700]%s[/color][/font_size][/b]" % question.question
+	match question.question_type:
+		QuizData.QuestionType.MATH:
+			math_section.visible = true
+			input_field.text = ""
+			input_field.grab_focus()
+		QuizData.QuestionType.QA:
+			qa_section.visible = true
+
+func _on_quiz_triggered(question: QuizData) -> void:
+	print("QuizUI: 收到答题信号, 题目:", question.question)
 	_current_question = question
 	_current_user_answer = ""
 	_show_all()
