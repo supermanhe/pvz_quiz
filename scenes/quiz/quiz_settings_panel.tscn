@@ -20,12 +20,12 @@ corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
 [node name="QuizSettingsPanel" type="PanelContainer"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -294.0
+anchors_preset = 0
+anchor_left = 0.0
+anchor_right = 0.0
+offset_left = 736.0
 offset_top = 108.0
-offset_right = 24.0
+offset_right = 1054.0
 offset_bottom = 498.0
 grow_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_quiz_panel")

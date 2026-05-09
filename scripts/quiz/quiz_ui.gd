@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 @onready var overlay: ColorRect = $Overlay
+@onready var quiz_panel_backplate: Panel = $QuizPanelBackplate
 @onready var quiz_panel: PanelContainer = $QuizPanel
 @onready var question_label: RichTextLabel = $QuizPanel/VBoxContainer/QuestionLabel
 @onready var math_section: VBoxContainer = $QuizPanel/VBoxContainer/MathSection
@@ -56,11 +57,13 @@ func _apply_overlay_settings() -> void:
 
 func _hide_all() -> void:
 	overlay.visible = false
+	quiz_panel_backplate.visible = false
 	quiz_panel.visible = false
 
 func _show_all() -> void:
 	_apply_overlay_settings()
 	overlay.visible = true
+	quiz_panel_backplate.visible = true
 	quiz_panel.visible = true
 
 func show_quiz(question: QuizData) -> void:
