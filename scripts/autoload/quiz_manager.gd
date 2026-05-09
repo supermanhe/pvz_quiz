@@ -8,7 +8,7 @@ var is_enabled := true
 var trigger_frequency := 3
 var quiz_speed := 0.25
 var wrong_penalty := 50
-var overlay_opacity := 0.5
+var overlay_opacity := 0.7
 var overlay_blur := 3.0
 
 var plant_count := 0

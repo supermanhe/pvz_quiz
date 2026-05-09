@@ -10,12 +10,16 @@ class_name CardSlotNorm
 @onready var card_slot_battle: CardSlotBattle = $CardSlotBattle
 
 var quiz_settings_panel: Control
+var quiz_settings_layer: CanvasLayer
 
 func _ready() -> void:
 	var quiz_settings_scene := load("res://scenes/quiz/quiz_settings_panel.tscn")
 	if quiz_settings_scene:
+		quiz_settings_layer = CanvasLayer.new()
+		quiz_settings_layer.layer = 20
+		add_child(quiz_settings_layer)
 		quiz_settings_panel = quiz_settings_scene.instantiate()
-		add_child(quiz_settings_panel)
+		quiz_settings_layer.add_child(quiz_settings_panel)
 
 
 ## 初始化出战卡槽，管理器调用
