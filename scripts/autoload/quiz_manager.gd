@@ -271,6 +271,13 @@ func start_quiz() -> void:
 	_original_time_scale = Engine.time_scale
 	Engine.time_scale = quiz_speed
 	_ensure_quiz_ui()
+	if is_instance_valid(_quiz_ui) and _quiz_ui.has_method("show_quiz"):
+		_quiz_ui.show_quiz(question)
+	else:
+		push_error("QuizManager: QuizUI无效，无法弹出")
+		is_quiz_active = false
+		Engine.time_scale = _original_time_scale
+		return
 	quiz_triggered.emit(question)
 
 func end_quiz(was_correct: bool, question: QuizData, user_answer: String = "") -> void:

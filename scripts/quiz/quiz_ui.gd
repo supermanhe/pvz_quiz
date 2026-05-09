@@ -20,11 +20,10 @@ var _current_user_answer: String = ""
 
 func _ready() -> void:
 	layer = 100
-	QuizManager.quiz_triggered.connect(_on_quiz_triggered)
 	QuizManager.settings_changed.connect(_on_quiz_settings_changed)
 	_setup_ui()
 	_hide_all()
-	print("QuizUI: _ready完成, 已连接信号")
+	print("QuizUI: _ready完成")
 
 func _setup_ui() -> void:
 	# 设置遮罩 shader
@@ -34,6 +33,8 @@ func _setup_ui() -> void:
 	_apply_overlay_settings()
 
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 0
+	quiz_panel.z_index = 1
 	quiz_panel.custom_minimum_size = Vector2(400, 250)
 	quiz_panel.theme = PVZ_THEME
 	result_label.visible = false
@@ -68,24 +69,6 @@ func _show_all() -> void:
 
 func show_quiz(question: QuizData) -> void:
 	print("QuizUI: show_quiz被调用, 题目:", question.question)
-	_current_question = question
-	_current_user_answer = ""
-	_show_all()
-	result_label.visible = false
-	math_section.visible = false
-	qa_section.visible = false
-	# 题目文字：加大字号 + 加粗 + 醒目颜色
-	question_label.text = "[b][font_size=28][color=#FFD700]%s[/color][/font_size][/b]" % question.question
-	match question.question_type:
-		QuizData.QuestionType.MATH:
-			math_section.visible = true
-			input_field.text = ""
-			input_field.grab_focus()
-		QuizData.QuestionType.QA:
-			qa_section.visible = true
-
-func _on_quiz_triggered(question: QuizData) -> void:
-	print("QuizUI: 收到答题信号, 题目:", question.question)
 	_current_question = question
 	_current_user_answer = ""
 	_show_all()
