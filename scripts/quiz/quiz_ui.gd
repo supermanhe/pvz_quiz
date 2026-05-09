@@ -15,7 +15,6 @@ extends Node
 @onready var result_label: Label = $PanelLayer/QuizPanel/VBoxContainer/ResultLabel
 
 const PVZ_THEME := preload("res://data/PVZ_theme.tres")
-const OVERLAY_SHADER := preload("res://shaders/quiz_overlay.gdshader")
 
 var _current_question: QuizData
 var _current_user_answer: String = ""
@@ -30,10 +29,6 @@ func _ready() -> void:
 	print("QuizUI: _ready完成")
 
 func _setup_ui() -> void:
-	# 设置遮罩 shader
-	var shader_mat := ShaderMaterial.new()
-	shader_mat.shader = OVERLAY_SHADER
-	overlay.material = shader_mat
 	_apply_overlay_settings()
 
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -53,10 +48,6 @@ func _setup_ui() -> void:
 	wrong_button.pressed.connect(_on_qa_answer.bind(false, "错"))
 
 func _apply_overlay_settings() -> void:
-	if overlay.material is ShaderMaterial:
-		var mat: ShaderMaterial = overlay.material
-		mat.set_shader_parameter("opacity", QuizManager.overlay_opacity)
-		mat.set_shader_parameter("blur_amount", QuizManager.overlay_blur)
 	overlay.color = Color(0, 0, 0, QuizManager.overlay_opacity)
 
 func _on_quiz_settings_changed() -> void:
