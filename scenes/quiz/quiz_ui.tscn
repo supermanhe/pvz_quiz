@@ -2,11 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/quiz/quiz_ui.gd" id="1"]
 
-[node name="QuizUI" type="CanvasLayer"]
-layer = 100
+[node name="QuizUI" type="Node"]
 script = ExtResource("1")
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="OverlayLayer" type="CanvasLayer" parent="."]
+layer = 126
+
+[node name="Overlay" type="ColorRect" parent="OverlayLayer"]
 z_index = 0
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,7 +18,10 @@ grow_vertical = 2
 mouse_filter = 0
 color = Color(0, 0, 0, 0.5)
 
-[node name="QuizPanel" type="PanelContainer" parent="."]
+[node name="PanelLayer" type="CanvasLayer" parent="."]
+layer = 127
+
+[node name="QuizPanel" type="PanelContainer" parent="PanelLayer"]
 z_index = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -30,60 +35,60 @@ offset_bottom = 125.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="QuizPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelLayer/QuizPanel"]
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="QuestionLabel" type="RichTextLabel" parent="QuizPanel/VBoxContainer"]
+[node name="QuestionLabel" type="RichTextLabel" parent="PanelLayer/QuizPanel/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 50)
 bbcode_enabled = true
 text = "题目"
 fit_content = true
 
-[node name="MathSection" type="VBoxContainer" parent="QuizPanel/VBoxContainer"]
+[node name="MathSection" type="VBoxContainer" parent="PanelLayer/QuizPanel/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="InputField" type="LineEdit" parent="QuizPanel/VBoxContainer/MathSection"]
+[node name="InputField" type="LineEdit" parent="PanelLayer/QuizPanel/VBoxContainer/MathSection"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 35)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_placeholder_color = Color(1, 1, 1, 0.5)
 placeholder_text = "输入答案"
 
-[node name="SubmitButton" type="Button" parent="QuizPanel/VBoxContainer/MathSection"]
+[node name="SubmitButton" type="Button" parent="PanelLayer/QuizPanel/VBoxContainer/MathSection"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 35)
 text = "确认"
 
-[node name="QASection" type="VBoxContainer" parent="QuizPanel/VBoxContainer"]
+[node name="QASection" type="VBoxContainer" parent="PanelLayer/QuizPanel/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="QAHintLabel" type="Label" parent="QuizPanel/VBoxContainer/QASection"]
+[node name="QAHintLabel" type="Label" parent="PanelLayer/QuizPanel/VBoxContainer/QASection"]
 layout_mode = 2
 text = "请家长判断对错"
 horizontal_alignment = 1
 
-[node name="ButtonRow" type="HBoxContainer" parent="QuizPanel/VBoxContainer/QASection"]
+[node name="ButtonRow" type="HBoxContainer" parent="PanelLayer/QuizPanel/VBoxContainer/QASection"]
 layout_mode = 2
 theme_override_constants/separation = 30
 alignment = 1
 
-[node name="CorrectButton" type="Button" parent="QuizPanel/VBoxContainer/QASection/ButtonRow"]
+[node name="CorrectButton" type="Button" parent="PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(80, 40)
 text = "对"
 
-[node name="WrongButton" type="Button" parent="QuizPanel/VBoxContainer/QASection/ButtonRow"]
+[node name="WrongButton" type="Button" parent="PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(80, 40)
 text = "错"
 
-[node name="ResultLabel" type="Label" parent="QuizPanel/VBoxContainer"]
+[node name="ResultLabel" type="Label" parent="PanelLayer/QuizPanel/VBoxContainer"]
 layout_mode = 2
 text = "结果"
 horizontal_alignment = 1

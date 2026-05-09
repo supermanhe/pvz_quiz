@@ -20,7 +20,7 @@ signal quiz_completed(was_correct: bool, question: QuizData)
 signal question_bank_changed
 signal settings_changed
 
-var _quiz_ui: CanvasLayer
+var _quiz_ui: Node
 
 func _ready() -> void:
 	EventBus.subscribe("quiz_plant_placed", _on_plant_placed)

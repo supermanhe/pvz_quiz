@@ -1,16 +1,18 @@
-extends CanvasLayer
+extends Node
 
-@onready var overlay: ColorRect = $Overlay
-@onready var quiz_panel: PanelContainer = $QuizPanel
-@onready var question_label: RichTextLabel = $QuizPanel/VBoxContainer/QuestionLabel
-@onready var math_section: VBoxContainer = $QuizPanel/VBoxContainer/MathSection
-@onready var input_field: LineEdit = $QuizPanel/VBoxContainer/MathSection/InputField
-@onready var submit_button: Button = $QuizPanel/VBoxContainer/MathSection/SubmitButton
-@onready var qa_section: VBoxContainer = $QuizPanel/VBoxContainer/QASection
-@onready var qa_hint_label: Label = $QuizPanel/VBoxContainer/QASection/QAHintLabel
-@onready var correct_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/CorrectButton
-@onready var wrong_button: Button = $QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
-@onready var result_label: Label = $QuizPanel/VBoxContainer/ResultLabel
+@onready var overlay_layer: CanvasLayer = $OverlayLayer
+@onready var panel_layer: CanvasLayer = $PanelLayer
+@onready var overlay: ColorRect = $OverlayLayer/Overlay
+@onready var quiz_panel: PanelContainer = $PanelLayer/QuizPanel
+@onready var question_label: RichTextLabel = $PanelLayer/QuizPanel/VBoxContainer/QuestionLabel
+@onready var math_section: VBoxContainer = $PanelLayer/QuizPanel/VBoxContainer/MathSection
+@onready var input_field: LineEdit = $PanelLayer/QuizPanel/VBoxContainer/MathSection/InputField
+@onready var submit_button: Button = $PanelLayer/QuizPanel/VBoxContainer/MathSection/SubmitButton
+@onready var qa_section: VBoxContainer = $PanelLayer/QuizPanel/VBoxContainer/QASection
+@onready var qa_hint_label: Label = $PanelLayer/QuizPanel/VBoxContainer/QASection/QAHintLabel
+@onready var correct_button: Button = $PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow/CorrectButton
+@onready var wrong_button: Button = $PanelLayer/QuizPanel/VBoxContainer/QASection/ButtonRow/WrongButton
+@onready var result_label: Label = $PanelLayer/QuizPanel/VBoxContainer/ResultLabel
 
 const PVZ_THEME := preload("res://data/PVZ_theme.tres")
 const OVERLAY_SHADER := preload("res://shaders/quiz_overlay.gdshader")
@@ -19,7 +21,9 @@ var _current_question: QuizData
 var _current_user_answer: String = ""
 
 func _ready() -> void:
-	layer = 100
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	overlay_layer.layer = 126
+	panel_layer.layer = 127
 	QuizManager.settings_changed.connect(_on_quiz_settings_changed)
 	_setup_ui()
 	_hide_all()
@@ -59,13 +63,13 @@ func _on_quiz_settings_changed() -> void:
 	_apply_overlay_settings()
 
 func _hide_all() -> void:
-	overlay.visible = false
-	quiz_panel.visible = false
+	overlay_layer.visible = false
+	panel_layer.visible = false
 
 func _show_all() -> void:
 	_apply_overlay_settings()
-	overlay.visible = true
-	quiz_panel.visible = true
+	overlay_layer.visible = true
+	panel_layer.visible = true
 
 func show_quiz(question: QuizData) -> void:
 	print("QuizUI: show_quiz被调用, 题目:", question.question)
