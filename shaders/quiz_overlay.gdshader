@@ -1,7 +1,8 @@
 shader_type canvas_item;
 
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
 uniform float opacity : hint_range(0.0, 1.0) = 0.5;
-uniform float blur_amount : hint_range(0.0, 10.0) = 0.0;
+uniform float blur_amount : hint_range(0.0, 10.0) = 3.0;
 uniform float overlay_layers : hint_range(1.0, 5.0, 1.0) = 3.0;
 
 void fragment() {
@@ -18,7 +19,7 @@ void fragment() {
         for (float x = -3.0; x <= 3.0; x += 1.0) {
             for (float y = -3.0; y <= 3.0; y += 1.0) {
                 float weight = exp(-(x * x + y * y) / two_sigma_sq);
-                blurred += texture(SCREEN_TEXTURE, SCREEN_UV + vec2(x, y) * pixel_size * blur_amount) * weight;
+                blurred += texture(screen_texture, SCREEN_UV + vec2(x, y) * pixel_size * blur_amount) * weight;
                 total_weight += weight;
             }
         }
