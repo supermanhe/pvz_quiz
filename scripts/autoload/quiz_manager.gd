@@ -3,12 +3,13 @@ extends Node
 var _question_loader := QuestionLoader.new()
 var _all_questions: Array[QuizData] = []
 var _wrong_records: Array[Dictionary] = []
-var _recent_question_keys: Array[String] = []  # 内容去重：type:question:answer
 
 var is_enabled := true
 var trigger_frequency := 3
 var quiz_speed := 0.25
 var wrong_penalty := 50
+var overlay_opacity := 0.5
+var overlay_blur := 3.0
 
 var plant_count := 0
 var is_quiz_active := false
@@ -17,8 +18,9 @@ var _original_time_scale := 1.0
 signal quiz_triggered(question: QuizData)
 signal quiz_completed(was_correct: bool, question: QuizData)
 signal question_bank_changed
+signal settings_changed
 
-var _quiz_ui: CanvasLayer
+var _quiz_ui: Node
 
 func _ready() -> void:
 	EventBus.subscribe("quiz_plant_placed", _on_plant_placed)
@@ -33,7 +35,7 @@ func _ensure_quiz_ui() -> void:
 	var scene := load("res://scenes/quiz/quiz_ui.tscn")
 	if scene:
 		_quiz_ui = scene.instantiate()
-		get_tree().root.add_child.call_deferred(_quiz_ui)
+		get_tree().root.add_child(_quiz_ui)
 		print("QuizManager: QuizUI加载成功")
 	else:
 		push_error("QuizManager: 无法加载quiz_ui.tscn")
@@ -41,7 +43,6 @@ func _ensure_quiz_ui() -> void:
 func reload_questions() -> Dictionary:
 	var report := _question_loader.load_all_questions_with_report()
 	_all_questions = report["questions"]
-	_recent_question_keys.clear()
 	question_bank_changed.emit()
 	return report
 
@@ -56,7 +57,6 @@ func get_question_bank_display_paths() -> Dictionary:
 		"folder": ProjectSettings.globalize_path("user://quiz_banks"),
 	}
 
-# 导入题库：校验 → 备份 → 替换 → 加载验证（支持 csv/txt/xlsx）
 func import_question_bank(source_path: String, question_type: QuizData.QuestionType) -> Dictionary:
 	if source_path.is_empty():
 		return { "success": false, "message": "未选择文件" }
@@ -68,11 +68,9 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 	# 1. 校验源文件
 	var validation := _question_loader.validate_file(source_path)
 	if not validation["valid"]:
-		var err_count: int = validation["errors"].size()
-		var first_err: String = validation["errors"][0]["reason"] if err_count > 0 else "未知错误"
 		return {
 			"success": false,
-			"message": "文件格式错误（%d处问题），未导入。\n第1个错误: %s" % [err_count, first_err],
+			"message": "文件格式错误（%d处问题），未导入" % validation["errors"].size(),
 			"errors": validation["errors"],
 		}
 
@@ -87,7 +85,7 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		if mk_err != OK:
 			return { "success": false, "message": "创建题库目录失败，错误码：%d" % mk_err }
 
-	# 3. 源文件 == 目标文件：直接重载（仅 CSV/TXT）
+	# 3. 源文件 == 目标文件：直接重载
 	if not is_xlsx:
 		var source_abs := ProjectSettings.globalize_path(source_path) if source_path.begins_with("user://") or source_path.begins_with("res://") else source_path
 		var target_abs := ProjectSettings.globalize_path(target_path) if target_path.begins_with("user://") or target_path.begins_with("res://") else target_path
@@ -100,7 +98,6 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 				"loaded": report["loaded"],
 				"skipped": report["skipped"],
 				"errors": report["errors"],
-				"warnings": report.get("warnings", []),
 			}
 
 	# 4. 备份原文件
@@ -119,7 +116,6 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 
 	# 5. 写入目标文件
 	if is_xlsx:
-		# xlsx → 读取数据 → 写入 CSV
 		var load_result := _question_loader.load_xlsx(source_path, question_type)
 		if load_result["questions"].is_empty():
 			if has_backup:
@@ -146,7 +142,6 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		file.store_string(csv_content)
 		file.close()
 	else:
-		# CSV/TXT → 直接复制
 		var copy_err := DirAccess.copy_absolute(source_path, target_path)
 		if copy_err != OK:
 			if has_backup:
@@ -184,7 +179,6 @@ func import_question_bank(source_path: String, question_type: QuizData.QuestionT
 		"loaded": report["loaded"],
 		"skipped": report["skipped"],
 		"errors": report["errors"],
-		"warnings": report.get("warnings", []),
 	}
 
 # 导出题库为 xlsx
@@ -203,7 +197,6 @@ func export_question_bank(question_type: QuizData.QuestionType, target_path: Str
 	if questions.is_empty():
 		return { "success": false, "message": "当前没有%s题可导出" % type_name }
 
-	# 构建数据
 	var headers: Array[String] = ["question", "answer"]
 	var rows: Array[Array] = []
 	for q in questions:
@@ -220,38 +213,54 @@ func export_question_bank(question_type: QuizData.QuestionType, target_path: Str
 		"count": questions.size(),
 	}
 
+# 导出错题本为 xlsx
+func export_wrong_records(target_path: String) -> Dictionary:
+	if target_path.is_empty():
+		return { "success": false, "message": "未选择保存位置" }
+
+	if _wrong_records.is_empty():
+		return { "success": false, "message": "错题本为空，没有可导出的内容" }
+
+	var headers: Array[String] = ["question", "answer", "user_answer", "wrong_count"]
+	var rows: Array[Array] = []
+	for record in _wrong_records:
+		rows.append([
+			record.get("question", ""),
+			record.get("answer", ""),
+			record.get("user_answer", ""),
+			str(record.get("count", 1)),
+		])
+
+	var xlsx := XlsxHandler.new()
+	var result := xlsx.write_xlsx(target_path, headers, rows)
+	if not result["success"]:
+		return { "success": false, "message": "导出失败: " + result["error"] }
+
+	return {
+		"success": true,
+		"message": "错题本导出成功！共 %d 条错题\n%s" % [_wrong_records.size(), target_path],
+		"count": _wrong_records.size(),
+	}
+
+# 获取错题本数据
+func get_wrong_records() -> Array[Dictionary]:
+	return _wrong_records
+
+# 清空错题本
+func clear_wrong_records() -> void:
+	_wrong_records.clear()
+	_save_wrong_records()
+
 func get_random_question() -> QuizData:
 	if _all_questions.is_empty():
 		reload_questions()
 	if _all_questions.is_empty():
 		return null
-
-	# 内容去重：按 type:question:answer 去重
-	var available: Array[QuizData] = []
-	for q in _all_questions:
-		var key := _make_dedup_key(q)
-		if key not in _recent_question_keys:
-			available.append(q)
-
-	# 所有题都出过了，重置历史
-	if available.is_empty():
-		_recent_question_keys.clear()
-		available = _all_questions
-
-	var picked := available[randi() % available.size()]
-	_recent_question_keys.append(_make_dedup_key(picked))
-
-	# 保留最近一半题库大小的历史
-	var max_recent := maxi(1, _all_questions.size() / 2)
-	if _recent_question_keys.size() > max_recent:
-		_recent_question_keys = _recent_question_keys.slice(-max_recent)
-
-	return picked
-
-func _make_dedup_key(q: QuizData) -> String:
-	return "%d:%s:%s" % [q.question_type, q.question, q.answer]
+	return _all_questions[randi() % _all_questions.size()]
 
 func start_quiz() -> void:
+	if not is_enabled:
+		return
 	if is_quiz_active:
 		return
 	var question := get_random_question()
@@ -261,20 +270,22 @@ func start_quiz() -> void:
 	is_quiz_active = true
 	_original_time_scale = Engine.time_scale
 	Engine.time_scale = quiz_speed
-	print("QuizManager: 准备弹出答题, quiz_ui有效:", is_instance_valid(_quiz_ui))
 	_ensure_quiz_ui()
 	if is_instance_valid(_quiz_ui) and _quiz_ui.has_method("show_quiz"):
 		_quiz_ui.show_quiz(question)
 	else:
 		push_error("QuizManager: QuizUI无效，无法弹出")
+		is_quiz_active = false
+		Engine.time_scale = _original_time_scale
+		return
 	quiz_triggered.emit(question)
 
-func end_quiz(was_correct: bool, question: QuizData) -> void:
+func end_quiz(was_correct: bool, question: QuizData, user_answer: String = "") -> void:
 	is_quiz_active = false
 	Engine.time_scale = _original_time_scale
 	if not was_correct:
 		EventBus.push_event("add_sun_value", [-wrong_penalty])
-		_record_wrong_answer(question)
+		_record_wrong_answer(question, user_answer)
 	quiz_completed.emit(was_correct, question)
 
 func _on_plant_placed() -> void:
@@ -295,18 +306,20 @@ func _on_game_progress_update(progress: int) -> void:
 		plant_count = 0
 		reload_questions()
 
-func _record_wrong_answer(question: QuizData) -> void:
+func _record_wrong_answer(question: QuizData, user_answer: String = "") -> void:
 	var timestamp := Time.get_datetime_string_from_system()
 	for record in _wrong_records:
 		if record["question"] == question.question and record["type"] == question.question_type:
 			record["count"] += 1
 			record["last_time"] = timestamp
+			record["user_answer"] = user_answer if not user_answer.is_empty() else record.get("user_answer", "")
 			_save_wrong_records()
 			return
 	_wrong_records.append({
 		"type": question.question_type,
 		"question": question.question,
 		"answer": question.answer,
+		"user_answer": user_answer,
 		"count": 1,
 		"last_time": timestamp,
 	})
@@ -331,10 +344,12 @@ func _load_settings() -> void:
 	var data = Global.load_json(path)
 	if data.is_empty():
 		return
-	is_enabled = data.get("enabled", false)
+	is_enabled = data.get("enabled", true)
 	trigger_frequency = data.get("trigger_frequency", 3)
 	quiz_speed = data.get("quiz_speed", 0.25)
 	wrong_penalty = data.get("wrong_penalty", 50)
+	overlay_opacity = data.get("overlay_opacity", 0.5)
+	overlay_blur = data.get("overlay_blur", 3.0)
 
 func save_settings() -> void:
 	var path := "user://quiz_settings.json"
@@ -343,4 +358,7 @@ func save_settings() -> void:
 		"trigger_frequency": trigger_frequency,
 		"quiz_speed": quiz_speed,
 		"wrong_penalty": wrong_penalty,
+		"overlay_opacity": overlay_opacity,
+		"overlay_blur": overlay_blur,
 	}, path)
+	settings_changed.emit()
